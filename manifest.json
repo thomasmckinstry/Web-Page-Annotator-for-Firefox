@@ -1,0 +1,8 @@
+{
+    "manifest_version": 2,
+    "name": "Annotater",
+    "version": "1.0",
+  
+    "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
+  }
+  
