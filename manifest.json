@@ -4,5 +4,12 @@
     "version": "1.0",
   
     "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
+
+    "content_scripts": [
+        {
+          "matches": ["*://*.mozilla.org/*"],
+          "js": ["borderify.js"]
+        }
+    ]
   }
   
