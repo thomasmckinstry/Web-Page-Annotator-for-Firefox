@@ -2,14 +2,29 @@
     "manifest_version": 2,
     "name": "Annotater",
     "version": "1.0",
+    "default_locale": "en",
   
     "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
+
+    "background": {
+      "scripts": ["background.js"]
+    },
+
+    "permissions": [
+      "menus",
+      "activeTab"
+    ],
+
+    "icons": {
+        "48": "icons/border-48.png"
+      },
 
     "content_scripts": [
         {
           "matches": ["*://*.mozilla.org/*"],
-          "js": ["borderify.js"]
+          "js": ["annotater.js"]
         }
     ]
+
   }
   
