@@ -10,9 +10,17 @@
       "scripts": ["background.js"]
     },
 
+    "sidebar_action": {
+      "default_icon": "icons/star.png",
+      "default_title" : "Annotater",
+      "default_panel": "sidebar/panel.html"
+    },
+
     "permissions": [
       "menus",
-      "activeTab"
+      "activeTab",
+      "storage",
+      "tabs"
     ],
 
     "commands": {

@@ -1,4 +1,4 @@
-// Confirmst that buttons were added correctly
+// Confirms that buttons were added correctly
 function onCreated() {
     if (browser.runtime.lastError) {
       console.log(`Error: ${browser.runtime.lastError}`);
@@ -7,14 +7,28 @@ function onCreated() {
     }
 }
 
-let gettingAllCommands = browser.commands.getAll();
-gettingAllCommands.then((commands) => {
-  for (let command of commands) {
-    // Note that this logs to the Add-on Debugger's console: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Debugging
-    // not the regular Web console.
-    console.log(command);
+// Is called when a background listener hears something. Is passed the command (either info.menuItemId or command depending on input source.)
+function handleMessage(command) {
+  // Injects content script to the web page
+  let executing = browser.tabs.executeScript({
+    file: "content_scripts/annotater.js"
+  });
+  executing.then(onExecuted)
+
+  // Gets an array of active tabs to determine which one to modify.
+  function onExecuted() {
+    let querying = browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    querying.then(messageTab)
   }
-});
+
+  // Sends a message to the tab containing the name of the command
+  function messageTab(tabs) {
+    browser.tabs.sendMessage(tabs[0].id, command)
+  }
+}
 
 // Creates the context menu buttons for interaction
 browser.menus.create({
@@ -31,43 +45,12 @@ browser.menus.create({
 
 browser.menus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "highlight-selection" || info.menuItemId === "annotate-selection") {
-    let executing = browser.tabs.executeScript({
-      file: "annotater.js",
-    });
-    executing.then(onExecuted)
+    handleMessage(info.menuItemId)
   }
-
-  // Add a function that deals will all the promises outside of each listener so I don't need to duplicate this
-  // New function should take info as an argument. Insert content script, then call onExecuted. onExecuted should be nested in the new function.
-  function onExecuted() {
-    let querying = browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    querying.then(messageTab)
-  }
-
-  function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, info.menuItemId)
-  }
-
-  // switch (info.menuItemId) {
-  //   case "highlight-selection":
-  //     console.log("highlighting");
-  //     break;
-  //   case "annotate-selection":
-  //     console.log("annotating");
-  //     break;
-  // }
 });
 
 browser.commands.onCommand.addListener((command, tab) => {
-    switch (command) {
-        case "highlight-selection":
-            console.log("highlighting")
-            break;
-        case "annotate-selection":
-            console.log("annotating")
-            break;
+    if (command === "highlight-selection" || command === "annotate-selection") {
+      handleMessage(command)
     }
 });
