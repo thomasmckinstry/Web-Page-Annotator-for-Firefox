@@ -15,6 +15,17 @@
       "activeTab"
     ],
 
+    "commands": {
+      "highlight-selection": {
+        "suggested_key": {"default": "Ctrl+Alt+H"},
+        "description": "Highlight the selected text in the default color"
+      },
+      "annotate-selection": {
+        "suggested_key":{"default": "Ctrl+Alt+N"},
+        "description": "Attached a note to the selected text"
+      }
+    },
+
     "icons": {
         "48": "icons/border-48.png"
       },
