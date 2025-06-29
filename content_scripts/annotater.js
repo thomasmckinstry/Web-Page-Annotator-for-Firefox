@@ -1,17 +1,54 @@
 
-
 // Needs to use a listener, can't be directly called by background script
 function highlightTextReceived(request, sender, sendResponse) {
     let selection = document.getSelection()
-    let selectionText = selection.anchorNode.textContent.substring(selection.anchorOffset, selection.focusOffset)
-    let content = selection.anchorNode.textContent
+    let parent = selection.anchorNode.parentElement
+    let newParent = document.createElement(parent.tagName)
 
-    const range = new Range();
-    range.setStart(selection.anchorNode, selection.anchoroffset)
-    range.setEnd(selection.anchorNode, selection.focusOffset)
-    const highlight = new Highlight(range)
-    CSS.highlights.set("text-highlight", highlight)
-    console.log("Attempted to highlight")
+    // let anchorHTML = selection.anchorNode.parentElement.innerHTML
+    // let focusHTML = selection.focusNode.parentElement.innerHTML
+
+    // console.log(anchorHTML)
+    // console.log(focusHTML)
+    // console.log(selection.toString())
+    
+    // // let startIndex = anchorHTML.indexOf(">")
+    // // let endIndex = focusHTML.lastIndexOf("<")
+
+    // selectionText = selection.toString()
+    // anchorIndex = anchorHTML.search(selectionText)
+    // selectionLength = selectionText.length
+
+    // anchorHTML = anchorHTML.substring(0, anchorIndex) + "<mark>" + anchorHTML.substring(anchorIndex, anchorIndex + selectionLength) + "</mark>" + anchorHTML.substring(anchorIndex + selectionLength)
+    // //focusHTML = focusHTML.substring(0, endIndex) + "</mark>" + focusHTML.substring(endIndex)
+
+    // selection.anchorNode.parentElement.outerHTML = anchorHTML
+    // // selection.anchorNode.parentElement.outerHTML = focusHTML
+    // console.log(anchorHTML)
+    // // console.log(selection.focusNode.parentElement.outerHTML)
+
+    let nodeList = parent.childNodes
+    let inSelection = false
+    for (i = 0; i <= nodeList.length; i++) {
+        node = nodeList[i]
+        console.log(node)
+        // console.log(node)
+        if (node == selection.anchorNode || node == selection.focusNode.nextSibling) {
+            inSelection = !inSelection
+            // console.log(inSelection)
+        }
+
+        if (inSelection) {
+            var mark = document.createElement('mark');
+            mark.appendChild(node)
+            newParent.appendChild(mark)
+            console.log("Append",mark)
+        } else {
+            newParent.appendChild(node)
+        }
+    }
+
+    parent.replaceWith(newParent)
 }
 
 function annotateTextReceived(request, sender, sendResponse) {
