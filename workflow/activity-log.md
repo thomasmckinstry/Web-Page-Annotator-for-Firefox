@@ -40,3 +40,15 @@ Next Steps:
     - Write HTML for the sidebar.
     - Figure out why attempting to highlight some elements is deleting them or adding gibberish.
         - Like to do with the element type.
+
+# Entry 3
+Time Spent:
+    Start Time: 11:45am
+    End Time: 
+    Duration: 
+Tasks:
+    - [ ] Bug fix why some elements are being deleted upon the highlightTextReceived call.
+Challenges:
+    - 
+Next Steps:
+    - 
