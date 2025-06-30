@@ -44,11 +44,13 @@ Next Steps:
 # Entry 3
 Time Spent:
     Start Time: 11:45am
-    End Time: 
-    Duration: 
+    End Time: 12:08pm
+    Duration: 23 minutes
 Tasks:
     - [ ] Bug fix why some elements are being deleted upon the highlightTextReceived call.
 Challenges:
-    - 
+    - Current method only gives Nodes and excludes Elements. 
+        - For current method (iterate through parent elements children) to work we must have a list containing Nodes and Elements.
 Next Steps:
-    - 
+    - Brainstorm other methods.
+    - Read documentation to find a solution for current method.
