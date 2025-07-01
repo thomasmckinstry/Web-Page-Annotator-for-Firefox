@@ -54,3 +54,18 @@ Challenges:
 Next Steps:
     - Brainstorm other methods.
     - Read documentation to find a solution for current method.
+
+# Entry 4
+Time Spent:
+    Start Time: 1:47pm
+    End Time: 
+    Duration: 
+Tasks:
+    - [ ] Figure out how to process Nodes and Elements at the same time.
+Challenges:
+    - When nodes that are not pure text nodes are appended they do not actually appear on the page.
+        - TextContent is being dropped.
+        - Starting from anchorNode, iterating through nextSibling doesn't necesarily get the whole selection.
+        - Need to consider direction of selection (which way to iterate).
+Next Steps:
+    - 

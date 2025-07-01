@@ -2,53 +2,63 @@
 // Needs to use a listener, can't be directly called by background script
 function highlightTextReceived(request, sender, sendResponse) {
     let selection = document.getSelection()
-    let parent = selection.anchorNode.parentElement
-    let newParent = document.createElement(parent.tagName)
+    let node = selection.anchorNode
+    // let focus = selection.focusNode
 
-    // let anchorHTML = selection.anchorNode.parentElement.innerHTML
-    // let focusHTML = selection.focusNode.parentElement.innerHTML
+    // console.log("Selection:", selection)
+    // console.log("Anchor:",node)
+    // console.log("Focus:",focus)
+    // console.log(node.parentNode.childNodes)
 
-    // console.log(anchorHTML)
-    // console.log(focusHTML)
-    // console.log(selection.toString())
-    
-    // // let startIndex = anchorHTML.indexOf(">")
-    // // let endIndex = focusHTML.lastIndexOf("<")
+    // while (node != focus.nextSibling) {
+    //     let parent = node.parentNode
+    //     let mark = document.createElement("mark")
+    //     mark.append(node.cloneNode)
+    //     mark.firstChild.textContent = node.textContent
 
-    // selectionText = selection.toString()
-    // anchorIndex = anchorHTML.search(selectionText)
-    // selectionLength = selectionText.length
+    //     parent.replaceChild(mark, node)
+    //     node = node.nextSibling
+    //     // console.log(node)
+    //     // console.log((node != focus.nextSibling), ", ", (node != null))
+    //     if (node == null) {
+    //         node = node
+    //         //console.log(node)
+    //     }
 
-    // anchorHTML = anchorHTML.substring(0, anchorIndex) + "<mark>" + anchorHTML.substring(anchorIndex, anchorIndex + selectionLength) + "</mark>" + anchorHTML.substring(anchorIndex + selectionLength)
-    // //focusHTML = focusHTML.substring(0, endIndex) + "</mark>" + focusHTML.substring(endIndex)
+    //     selection.empty()
+    // }
+    // let newParent = document.createElement(parent.tagName)
 
-    // selection.anchorNode.parentElement.outerHTML = anchorHTML
-    // // selection.anchorNode.parentElement.outerHTML = focusHTML
-    // console.log(anchorHTML)
-    // // console.log(selection.focusNode.parentElement.outerHTML)
-
-    let nodeList = parent.childNodes
+    let nodeList = node.parentNode.childNodes
+    // let elementList = parent.children
     let inSelection = false
-    for (i = 0; i <= nodeList.length; i++) {
+
+    var mark = document.createElement('mark');
+    // mark.appendChild(selection.anchorNode.parentElement)
+    // document.replaceChild(selection.anchorNode.parentElement, mark)
+    // console.log(mark)
+    // console.log(node)
+    for (i = 0; i < nodeList.length; i++) {
         node = nodeList[i]
-        console.log(node)
-        // console.log(node)
-        if (node == selection.anchorNode || node == selection.focusNode.nextSibling) {
+        if (node === selection.anchorNode || node === selection.focusNode.nextSibling) {
             inSelection = !inSelection
-            // console.log(inSelection)
         }
+        console.log(node, i, inSelection)
 
         if (inSelection) {
-            var mark = document.createElement('mark');
-            mark.appendChild(node)
-            newParent.appendChild(mark)
-            console.log("Append",mark)
-        } else {
-            newParent.appendChild(node)
+            mark.appendChild(node.cloneNode())
+            mark.firstChild.textContent = node.textContent
+            console.log(mark.lastChild)
+            if (node != selection.anchorNode && node.parentNode != null) {
+                // console.log(node)
+                node.parentNode.removeChild(node)
+            }
+            // console.log("Append",mark,"after marking.")
         }
     }
 
-    parent.replaceWith(newParent)
+    console.log(mark)
+    selection.anchorNode.parentNode.replaceChild(mark, selection.anchorNode)
 }
 
 function annotateTextReceived(request, sender, sendResponse) {
