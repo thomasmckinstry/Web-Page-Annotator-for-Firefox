@@ -1,6 +1,10 @@
 
 // Needs to use a listener, can't be directly called by background script
 function highlightTextReceived(request, sender, sendResponse) {
+    highlightText()
+}
+
+function highlightText() {
     let selection = document.getSelection()
     let node = selection.anchorNode
     let nodeList = node.parentNode.childNodes
