@@ -75,12 +75,19 @@ Next Steps:
 # Entry 5
 Time Spent:
     Start Time: 10:15am
-    End Time: 
-    Duration: 
+    End Time: 11:40am
+    Duration: 85 minutes
 Tasks:
-    - [ ] Read up on DOM to figure out what I am misunderstanding.
-    - [ ] Make a sketch for sidebar.
+    - [X] Read up on DOM to figure out what I am misunderstanding.
+        - Use a specific function to compare Nodes
+    - [X] Make a sketch for sidebar.
 Challenges:
-    - 
+    - Across multiple "parent" nodes, building a new "mark" element off of the anchor node will not suffice.
+        - Check if entering a new "parent" than the one that the anchor existed in.
 Next Steps:
-    - 
+    - Figure out why highlightText doesn't work for backwards selections.
+    - Make highlight text only highlight actual selection instead of all nodes in selection.
+        - Might need to substring stuff. Consider only allowing parts of <p> elements to be highlighted. Any other elements should be highlighted completely.
+            - Elements such as <b> or <a>/<href> will often be a proper noun, and it's unlikely someone would not highlight the whole thing.
+    - Look into popups for annotations.
+    - Write HTML and CSS for sidebar.
