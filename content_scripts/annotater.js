@@ -8,45 +8,54 @@ function highlightText() {
     let selection = document.getSelection()
     let anchor = selection.anchorNode
     let nodeList = anchor.parentNode.childNodes
+    let direction = selection.direction // Saving this so it can be used at the end. Removing selected nodes affects the selection, which may cause issues.
 
     let inSelection = false
 
+    // Cloning nodes as nodes will be removed as we iterate through the NodeList, so references may be lost otherwise.
     let endSelection = selection.focusNode.cloneNode()
     let startSelection = selection.anchorNode.cloneNode()
     endSelection.innerHTML = selection.focusNode.innerHTML
     startSelection.innerHTML = selection.anchorNode.innerHTML
 
+    // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension.
     if (selection.rangeCount > 1) {
         console.log("Can only highlight one range at a time.")
         return
     }
 
-    if (selection.direction = "backward") {
-
+    // The direction a selection is made in affects the anchor Node and focus Node. Doing this is easier than changing the direction of iteration.
+    if (direction == "backward") {
+        console.log("backwards!")
+        endSelection = selection.anchorNode.cloneNode()
+        endSelection.innerHTML = selection.anchorNode.innerHTML
+        startSelection = selection.focusNode.cloneNode()
+        startSelection = selection.focusNode.innerHTML
     }
 
-
+    // This might be unnecessary after making the chnge to the comparison function.
     if (endSelection.nodeType == Node.TEXT_NODE) {
         endSelection = selection.focusNode.parentNode.cloneNode()
         endSelection.innerHTML = selection.focusNode.parentNode.innerHTML
-        // console.log(selection.focusNode.parentNode, selection.focusNode.parentElement)
     }
 
     var mark = document.createElement('mark');
 
     // Gonna need to sub this out for a while look to properly iterate across multiple nodes.
+    console.log(startSelection)
     for (i = 0; i < nodeList.length; i++) {
         let node = nodeList[i]
         console.log(node)
-        if (node == selection.anchorNode) {
+        if (node.isEqualNode(startSelection)) {
             inSelection = true
+            console.log("inSelection true")
         }
 
         if (inSelection) {
             let newNode = node.cloneNode()
             newNode.innerHTML = node.innerHTML
             mark.appendChild(newNode)
-            if (node != selection.anchorNode && node.parentNode != null) {
+            if (!node.isEqualNode(startSelection) && node.parentNode != null) {
                 node.parentNode.removeChild(node)
                 i--;
             }
@@ -54,13 +63,17 @@ function highlightText() {
 
         if (node.isEqualNode(endSelection)) {
             inSelection = false
-            console.log(node, "===", endSelection)
-        } else {
-            console.log(node, "!=", endSelection)
+            console.log("inSelection false")
         }
     }
 
-    selection.anchorNode.parentNode.replaceChild(mark, selection.anchorNode)
+    if (direction == "backwards") {
+        console.log("Adding mark at focus",mark)
+        selection.focusNode.parentNode.replaceChild(mark, selection.focusNode)
+    } else {
+        console.log("Adding mark at anchor",mark)
+        selection.anchorNode.parentNode.replaceChild(mark, selection.anchorNode)
+    }
 }
 
 function annotateTextReceived(request, sender, sendResponse) {
