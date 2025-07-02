@@ -71,3 +71,16 @@ Next Steps:
     - Figure out how to highlight between multiple Nodes/Elements.
     - Refactor highlightTextReceived into a separate function.
     - Make HTML document for sidebar.
+
+# Entry 5
+Time Spent:
+    Start Time: 10:15am
+    End Time: 
+    Duration: 
+Tasks:
+    - [ ] Read up on DOM to figure out what I am misunderstanding.
+    - [ ] Make a sketch for sidebar.
+Challenges:
+    - 
+Next Steps:
+    - 
