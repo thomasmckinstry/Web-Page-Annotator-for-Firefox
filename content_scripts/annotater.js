@@ -76,6 +76,11 @@ function highlightText() {
     }
 }
 
+// Similar process to highlightTextReceived
+// Call a separate function annotateText(). Find the selection and place it all into a div.
+// The event listeners will be added to the element that is created upon the annotation.
+// Some style aspect should be changed to indicate that a section of text is annotated
+// An additional popup has to exist to receive the note text.
 function annotateTextReceived(request, sender, sendResponse) {
     let selection = document.getSelection()
 }

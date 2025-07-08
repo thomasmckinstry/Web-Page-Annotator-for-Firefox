@@ -1,0 +1,22 @@
+.notes {
+  display: grid;
+  width: auto;
+  height: auto;
+}
+
+.annotated-icons {
+  display: flex;
+  width: auto;
+  height: fit-content;
+  margin: 2px;
+  border: solid;
+  border-color: black;
+  border-width: 1px;
+}
+
+.note-icon {
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+}

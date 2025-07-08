@@ -41,7 +41,3 @@ This takes out the step of having to download a document or open another applica
 4. The sidebar should be able to be minimized.
 5. A note should be able to be deleted from the sidebar.
 6. The sidebar will contain a "trash" section where it will retain a deleted note for some time.
-# Resources
-- https://extensionworkshop.com/documentation/develop/firefox-workflow-overview/
-- https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
-- Similar Project: https://addons.mozilla.org/en-US/firefox/addon/diigo-web-collector/
