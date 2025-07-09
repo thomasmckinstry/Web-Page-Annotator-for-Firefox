@@ -3,15 +3,28 @@
   width: auto;
   height: auto;
 }
+.note {
+  width: auto;
+  height: fit-content;
+  border: solid;
+  margin: 2px;
+  border-color: black;
+  border-width: 2px;
+}
 
-.annotated-icons {
+.button {
+
+}
+
+.note-text {
+  margin: 15px;
+}
+
+.note-header {
   display: flex;
   width: auto;
   height: fit-content;
   margin: 2px;
-  border: solid;
-  border-color: black;
-  border-width: 1px;
 }
 
 .note-icon {
