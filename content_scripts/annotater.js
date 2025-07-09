@@ -33,16 +33,20 @@ function highlightText() {
         startSelection = selection.focusNode.innerHTML
     }
 
-    // This might be unnecessary after making the chnge to the comparison function.
-    if (endSelection.nodeType == Node.TEXT_NODE) {
-        endSelection = selection.focusNode.parentNode.cloneNode()
-        endSelection.innerHTML = selection.focusNode.parentNode.innerHTML
-    }
+    // This might be unnecessary after making the change to the comparison function.
+    // if (endSelection.nodeType == Node.TEXT_NODE) {
+    //     endSelection = selection.focusNode.parentNode.cloneNode()
+    //     endSelection.innerHTML = selection.focusNode.parentNode.innerHTML
+    // }
 
     var mark = document.createElement('mark');
+    var selectionRemainder;
+
+    console.log("Anchor Node:", startSelection)
+    console.log("Focus Node:", endSelection)
 
     // Gonna need to sub this out for a while look to properly iterate across multiple nodes.
-    console.log(startSelection)
+    // console.log(startSelection)
     for (i = 0; i < nodeList.length; i++) {
         let node = nodeList[i]
         console.log(node)
@@ -51,7 +55,14 @@ function highlightText() {
             console.log("inSelection true")
         }
 
-        if (inSelection) {
+        if (node.isEqualNode(endSelection) && node.nodeType == Node.TEXT_NODE) {
+            let selectedText = node.textContent.substring(0, selection.focusOffset)
+            selectionRemainder = document.createTextNode(node.textContent.substring(selection.focusOffset))
+            console.log(selectionRemainder.innerHTML)
+            mark.innerHTML = mark.innerHTML + selectedText
+            node.parentNode.removeChild(node)
+        }
+        else if (inSelection) {
             let newNode = node.cloneNode()
             newNode.innerHTML = node.innerHTML
             mark.appendChild(newNode)
@@ -68,12 +79,16 @@ function highlightText() {
     }
 
     if (direction == "backwards") {
-        console.log("Adding mark at focus",mark)
+        // console.log("Adding mark at focus",mark)
         selection.focusNode.parentNode.replaceChild(mark, selection.focusNode)
     } else {
-        console.log("Adding mark at anchor",mark)
+        // console.log("Adding mark at anchor",mark)
         selection.anchorNode.parentNode.replaceChild(mark, selection.anchorNode)
     }
+
+    console.log(selectionRemainder)
+    console.log("Place Remainder after mark", mark.nextSibling)
+    mark.parentNode.insertBefore(selectionRemainder, mark.nextSibling)
 }
 
 // Similar process to highlightTextReceived
