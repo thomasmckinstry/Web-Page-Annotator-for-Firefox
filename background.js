@@ -1,3 +1,7 @@
+let executed = false
+let executingContent
+let executingSidebar
+
 // Confirms that buttons were added correctly
 function onCreated() {
     if (browser.runtime.lastError) {
@@ -8,12 +12,19 @@ function onCreated() {
 }
 
 // Is called when a background listener hears something. Is passed the command (either info.menuItemId or command depending on input source.)
-function handleMessage(command) {
+function handleMessage(command) {console.log("handleMessage")
   // Injects content script to the web page
-  let executing = browser.tabs.executeScript({
-    file: "content_scripts/annotater.js"
-  });
-  executing.then(onExecuted)
+  if (!executed) {
+    executingContent = browser.tabs.executeScript({
+      file: "content_scripts/annotater.js"
+    });
+    executingSidebar = browser.tabs.executeScript({
+      file: "sidebar/notes-sidebar.js"
+    });
+    executed = true
+  }
+
+  executingContent.then(onExecuted)
 
   // Gets an array of active tabs to determine which one to modify.
   function onExecuted() {
