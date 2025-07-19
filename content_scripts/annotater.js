@@ -4,7 +4,6 @@ function highlightTextReceived(request, sender, sendResponse) {
     highlightText()
 }
 
-//TODO: Change to not use nodeList and instead iterate through the DOM from individual nodes
 function highlightText() {
     var selection = document.getSelection()
     var direction = selection.direction // Saving this so it can be used at the end. Removing selected nodes affects the selection, which may cause issues.
@@ -14,20 +13,16 @@ function highlightText() {
     if (selection.rangeCount > 1) {
         window.alert("Can only highlight one range at a time.")
         return
-    } else if (direction == "backward") { // I mostly highlight forwards so restricting this shouldn't affect (my) usage much. It would also be complex to implement
-        window.alert("Cannot annotate selections done 'backwards'")
-        return
     }
-
     var range = selection.getRangeAt(0)
     var mark = document.createElement("mark")
     console.log(mark)
     mark.setAttribute("annotaterId", id)
     try {
         range.surroundContents(mark)
-        localStorage.setItem(`annotater${id}`, `{ "type": "highlight" "mark": ${mark} }`)
+        localStorage.setItem(`annotater${id}`, `{ "type": "highlight" "range": ${range} }`)
     } catch(err) {
-        window.alert("Selection invalid; Try selecting within a single text block, or an entire link.") // TODO: Make this error message more specific
+        window.alert("Selection invalid") // TODO: Make this error message more specific
         return
     }
 

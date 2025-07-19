@@ -13,7 +13,8 @@
     "sidebar_action": {
       "default_icon": "icons/star.png",
       "default_title" : "Annotater",
-      "default_panel": "sidebar/notes-sidebar.html"
+      "default_panel": "sidebar/notes-sidebar.html",
+      "open_at_install": false
     },
 
     "permissions": [
@@ -45,8 +46,8 @@
 
     "content_scripts": [
         {
-          "matches": ["*://*.mozilla.org/*"],
-          "js": ["annotater.js"]
+          "matches": ["*://*/*"],
+          "js": ["content_scripts/annotater.js", "sidebar/notes-sidebar.js"]
         }
     ]
 
