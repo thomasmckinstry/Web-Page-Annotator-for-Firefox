@@ -16,7 +16,6 @@ function highlightText() {
     }
     var range = selection.getRangeAt(0)
     var mark = document.createElement("mark")
-    console.log(mark)
     mark.setAttribute("annotaterId", id)
     try {
         range.surroundContents(mark)
@@ -26,7 +25,8 @@ function highlightText() {
         return
     }
 
-    // browser.runtime.sendMessage(localStorage.getItem(id))
+    let storedItem = localStorage.getItem(`annotater${id}`)
+    browser.runtime.sendMessage({type: "highlight-text", id: `annotater${id}`, content: storedItem}) // TODO: See if this can send just the id and have background fetch from localStorage
 }
 
 // Similar process to highlightTextReceived
