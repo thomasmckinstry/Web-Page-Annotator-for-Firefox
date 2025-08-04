@@ -7,7 +7,7 @@
     "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
 
     "background": {
-      "scripts": ["background.js", "sidebar/notes-sidebar.js"]
+      "scripts": ["background.js"]
     },
 
     "sidebar_action": {

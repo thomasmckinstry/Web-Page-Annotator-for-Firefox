@@ -8,7 +8,7 @@ function onCreated() {
 }
 
 // Is called when a background listener hears something. Is passed the command (either info.menuItemId or command depending on input source.)
-function handleMessage(command) {console.log("handleMessage")
+function handleMessage(command) {
   let querying = browser.tabs.query({
     active: true,
     currentWindow: true,
