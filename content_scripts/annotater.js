@@ -1,3 +1,33 @@
+function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
+{
+    if (node.firstChild)
+        return node.firstChild;
+    while (node)
+    {
+        if (node.nextSibling)
+            return node.nextSibling;
+        node = node.parentNode;
+    }
+}
+
+function getNodesInRange(range) // Partially taken from https://stackoverflow.com/a/7931003
+{
+    var start = range.startContainer;
+    var end = range.endContainer;
+    var commonAncestor = range.commonAncestorContainer;
+    var nodes = [];
+    var node;
+
+    for (node = start; node; node = getNextNode(node))
+    {
+        nodes.push(node);
+        if (node == end)
+            break;
+    }
+
+    return nodes;
+}
+
 // Needs to use a listener, can't be directly called by background script
 function highlightTextReceived(request, sender, sendResponse) {
     highlightText()
@@ -13,23 +43,39 @@ function highlightText() {
         return
     }
     var range = selection.getRangeAt(0)
+    var start = range.startContainer.cloneNode()
+    var startOffset = range.startOffset
+    var end = range.endContainer.cloneNode()
+    var endOffset = range.endOffset
+    console.log(start, end)
     var mark = document.createElement("mark")
     mark.setAttribute("annotaterId", id)
     try {
-        // TODO: Make this work across nodes.
-        // See if this helps https://stackoverflow.com/questions/61840697/javascript-range-surroundcontents-catch-invalidstateerror
         range.surroundContents(mark)
-        localStorage.setItem(`annotater${id}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
-        if (localStorage.getItem("annotationCount") == null) {
-            localStorage.setItem("annotationCount", 1)
-        } else {
-            localStorage.setItem("annotationCount", localStorage.getItem("annotationCount") + 1)
-        }
     } catch(err) {
-        window.alert(err)
-        return
+        var nodes = getNodesInRange(range)
+        nodes.forEach((node) => {
+            mark = document.createElement("mark")
+            node.parentNode.replaceChild(mark, node)
+            mark.appendChild(node)
+            if (node.isEqualNode(start) && node.nodeType == Node.TEXT_NODE) {
+                var newText = document.createTextNode(node.textContent.substring(0, startOffset))
+                node.textContent = node.textContent.substring(startOffset)
+                mark.parentNode.insertBefore(newText, mark)
+            } else if (node.isEqualNode(end) && node.nodeType == Node.TEXT_NODE) {
+                var newText = document.createTextNode(node.textContent.substring(endOffset))
+                node.textContent = node.textContent.substring(0, endOffset)
+                mark.parentNode.insertAfter(newText, mark)
+            }
+        })
     }
-
+    // TODO: localStorage corresponds to top-level domains. So anything stored to wikipedia.com/wiki will appear on every subdomain. Fix by adding the url to saved data and checking before displaying to sidebar.
+    localStorage.setItem(`annotater${id}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
+    if (localStorage.getItem("annotationCount") == null) {
+        localStorage.setItem("annotationCount", 1)
+    } else {
+        localStorage.setItem("annotationCount", localStorage.getItem("annotationCount") + 1)
+    }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics)
         browser.runtime.sendMessage({type: "highlight-text", id: `annotater${id}`, content: range.toString()})
@@ -54,7 +100,7 @@ function annotateTextReceived(request, sender, sendResponse) {
     }
 
     var range = selection.getRangeAt(0)
-
+    // TODO: Actually implement the popup.
     localStorage.setItem(`annotater${id}`, `{ "type": "note", "range": "${range}", "annotation": "${note}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -62,7 +108,7 @@ function annotateTextReceived(request, sender, sendResponse) {
         localStorage.setItem("annotationCount", localStorage.getItem("annotationCount") + 1)
     }
     try {
-        // TODO: range.toString() can return gibberish in certain cases (See phonetics)
+        // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
         browser.runtime.sendMessage({type: "annotate-text", id: `annotater${id}`, content: range.toString(), annotation: note})
     } catch (err) {
         console.log(err)
@@ -97,7 +143,15 @@ function refreshSidebar() {
 }
 
 function reannotate() {
-    console.log
+    let notes = new Map();
+    for (i = 0; i < localStorage.length; i ++) {
+        let key = localStorage.key(i)
+        if (key.includes("annotater")) {
+            notes.set(key, JSON.parse(localStorage.getItem(key)))
+        }
+    }
+    let body = document.body;
+    // domTraverse(body)
 }
 
 browser.runtime.onMessage.addListener((command, tab) => {
