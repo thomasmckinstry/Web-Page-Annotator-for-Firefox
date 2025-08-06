@@ -1,3 +1,5 @@
+let url;
+
 function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
 {
     if (node.firstChild)
@@ -70,7 +72,7 @@ function highlightText() {
         })
     }
     // TODO: localStorage corresponds to top-level domains. So anything stored to wikipedia.com/wiki will appear on every subdomain. Fix by adding the url to saved data and checking before displaying to sidebar.
-    localStorage.setItem(`annotater${id}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
+    localStorage.setItem(`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
@@ -101,7 +103,7 @@ function annotateTextReceived(request, sender, sendResponse) {
 
     var range = selection.getRangeAt(0)
     // TODO: Actually implement the popup.
-    localStorage.setItem(`annotater${id}`, `{ "type": "note", "range": "${range}", "annotation": "${note}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
+    localStorage.setItem(`annotater${id}${url}`, `{ "type": "note", "range": "${range}", "annotation": "${note}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
@@ -131,7 +133,7 @@ function refreshSidebar() {
     for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
 
-        if (key.includes("annotater")) {
+        if (key.includes("annotater") && key.includes(url)) {
             let item = JSON.parse(localStorage.getItem(key))
             if (item.type == "note") {
                 browser.runtime.sendMessage({type: "annotate-text", id: key, content: item.content, annotation: item.note})
@@ -167,4 +169,6 @@ browser.runtime.onMessage.addListener((command, tab) => {
     }
 })
 
+url = window.location.href
+console.log(url)
 reannotate()
