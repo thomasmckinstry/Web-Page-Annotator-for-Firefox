@@ -1,3 +1,4 @@
+let domain;
 let url;
 
 function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
@@ -67,7 +68,8 @@ function highlightText() {
             } else if (node.isEqualNode(end) && node.nodeType == Node.TEXT_NODE) {
                 var newText = document.createTextNode(node.textContent.substring(endOffset))
                 node.textContent = node.textContent.substring(0, endOffset)
-                mark.parentNode.insertAfter(newText, mark)
+                mark.parentNode.replaceChild(newText, mark)
+                newText.parentElement.insertBefore(mark, newText)
             }
         })
     }
@@ -169,6 +171,8 @@ browser.runtime.onMessage.addListener((command, tab) => {
     }
 })
 
-url = window.location.href
-console.log(url)
+domain = window.location.href
+url = domain.substring(domain.lastIndexOf("/"))
+
+console.log(domain, url)
 reannotate()
