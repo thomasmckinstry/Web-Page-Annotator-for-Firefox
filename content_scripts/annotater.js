@@ -17,7 +17,6 @@ function getNodesInRange(start, end) // Partially taken from https://stackoverfl
 {
     var nodes = [];
     var node;
-
     for (node = start; node; node = getNextNode(node))
     {
         nodes.push(node);
@@ -38,9 +37,9 @@ function highlightTextReceived(request, sender, sendResponse) {
         return
     }
     var range = selection.getRangeAt(0)
-    var start = range.startContainer.cloneNode()
+    var start = range.startContainer
     var startOffset = range.startOffset
-    var end = range.endContainer.cloneNode()
+    var end = range.endContainer
     var endOffset = range.endOffset
     let note = highlightText(id, start, end, startOffset, endOffset)
     localStorage.setItem(note[0], note[1])
@@ -58,18 +57,20 @@ function highlightTextReceived(request, sender, sendResponse) {
 }
 
 function highlightText(id, start, end, startOffset, endOffset) {
+    var startClone = start.cloneNode()
+    var endClone = end.cloneNode()
     var mark = document.createElement("mark")
     mark.setAttribute("annotaterId", id)
     var nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
         mark = document.createElement("mark")
-        node.parentNode.replaceChild(mark, node) // TODO: node.parentNode is getting null for some reason.
+        node.parentNode.replaceChild(mark, node)
         mark.appendChild(node)
-        if (node.isEqualNode(start) && node.nodeType == Node.TEXT_NODE) {
+        if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
             var newText = document.createTextNode(node.textContent.substring(0, startOffset))
             node.textContent = node.textContent.substring(startOffset)
             mark.parentNode.insertBefore(newText, mark)
-        } else if (node.isEqualNode(end) && node.nodeType == Node.TEXT_NODE) {
+        } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
             var newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
             mark.parentNode.replaceChild(newText, mark)
