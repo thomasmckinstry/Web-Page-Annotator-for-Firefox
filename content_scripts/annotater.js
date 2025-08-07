@@ -42,8 +42,7 @@ function highlightTextReceived(request, sender, sendResponse) {
     var startOffset = range.startOffset
     var end = range.endContainer.cloneNode()
     var endOffset = range.endOffset
-    let note = highlightText(id, start, end, startOffset, endOffset) // TODO: Will be adjusted to recieve the string to add to localStorage, along with key
-    // TODO: Add information to localStorage
+    let note = highlightText(id, start, end, startOffset, endOffset)
     localStorage.setItem(note[0], note[1])
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -64,7 +63,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
     var nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
         mark = document.createElement("mark")
-        node.parentNode.replaceChild(mark, node)
+        node.parentNode.replaceChild(mark, node) // TODO: node.parentNode is getting null for some reason.
         mark.appendChild(node)
         if (node.isEqualNode(start) && node.nodeType == Node.TEXT_NODE) {
             var newText = document.createTextNode(node.textContent.substring(0, startOffset))
@@ -140,13 +139,13 @@ function refreshSidebar() {
 }
 
 function checkAnnotatedNode(node, notes) {
-    let iter = notes.key
-    let currKey = iter.next()
-    while (!notes.done) {
-        if (node.isEqualNode(notes.getItem(currKey))) {
+    let iter = notes.keys()
+    let currKey = iter.next().value
+    while (currKey != null) {
+        if (node.isEqualNode(notes.get(currKey))) {
             return currKey
         }
-        currKey = notes.next()
+        currKey = iter.next().value
     }
     return null
 }
@@ -161,13 +160,12 @@ function reannotate() {
     }
     var body = document.body;
     var node = body.firstChild
-    while (node != null) {
+    while (node != null) { // TODO: This is an infinite (or very slow) loop.
         let key = checkAnnotatedNode(node, notes)
         if (key) {
             let note = JSON.parse(localStorage.getItem(key))
             if (note.type == "highlight") {
-                highlightText(note.id, note.start, note.startOffset, note.end, note.endOffset) // TODO: Adjust highlight text to not add to localStorage every time.
-            } else {
+                highlightText(note.id, note.start, note.startOffset, note.end, note.endOffset)
                 annotateText(note.id, note.start, note.startOffset, note.end, note.endOffset) // TODO: Actually implement annotateText
             }
         }
@@ -189,5 +187,5 @@ browser.runtime.onMessage.addListener((command, tab) => {
 })
 
 website = window.location.href
-url = domain.substring(domain.lastIndexOf("/"))
+url = website.substring(website.lastIndexOf("/"))
 reannotate()
