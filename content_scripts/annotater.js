@@ -13,11 +13,8 @@ function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
     }
 }
 
-function getNodesInRange(range) // Partially taken from https://stackoverflow.com/a/7931003
+function getNodesInRange(start, end) // Partially taken from https://stackoverflow.com/a/7931003
 {
-    var start = range.startContainer;
-    var end = range.endContainer;
-    var commonAncestor = range.commonAncestorContainer;
     var nodes = [];
     var node;
 
@@ -33,13 +30,8 @@ function getNodesInRange(range) // Partially taken from https://stackoverflow.co
 
 // Needs to use a listener, can't be directly called by background script
 function highlightTextReceived(request, sender, sendResponse) {
-    highlightText()
-}
-
-function highlightText() {
     var selection = document.getSelection()
     var id = getId() // Will be used to identify the new <mark> and note in local storage
-
     // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension.
     if (selection.rangeCount > 1) {
         window.alert("Can only highlight one range at a time.")
@@ -50,31 +42,9 @@ function highlightText() {
     var startOffset = range.startOffset
     var end = range.endContainer.cloneNode()
     var endOffset = range.endOffset
-    console.log(start, end)
-    var mark = document.createElement("mark")
-    mark.setAttribute("annotaterId", id)
-    try {
-        range.surroundContents(mark)
-    } catch(err) {
-        var nodes = getNodesInRange(range)
-        nodes.forEach((node) => {
-            mark = document.createElement("mark")
-            node.parentNode.replaceChild(mark, node)
-            mark.appendChild(node)
-            if (node.isEqualNode(start) && node.nodeType == Node.TEXT_NODE) {
-                var newText = document.createTextNode(node.textContent.substring(0, startOffset))
-                node.textContent = node.textContent.substring(startOffset)
-                mark.parentNode.insertBefore(newText, mark)
-            } else if (node.isEqualNode(end) && node.nodeType == Node.TEXT_NODE) {
-                var newText = document.createTextNode(node.textContent.substring(endOffset))
-                node.textContent = node.textContent.substring(0, endOffset)
-                mark.parentNode.replaceChild(newText, mark)
-                newText.parentElement.insertBefore(mark, newText)
-            }
-        })
-    }
-    // TODO: localStorage corresponds to top-level domains. So anything stored to wikipedia.com/wiki will appear on every subdomain. Fix by adding the url to saved data and checking before displaying to sidebar.
-    localStorage.setItem(`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
+    let note = highlightText(id, start, end, startOffset, endOffset) // TODO: Will be adjusted to recieve the string to add to localStorage, along with key
+    // TODO: Add information to localStorage
+    localStorage.setItem(note[0], note[1])
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
@@ -82,10 +52,33 @@ function highlightText() {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics)
-        browser.runtime.sendMessage({type: "highlight-text", id: `annotater${id}`, content: range.toString()})
+        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: range.toString()})
     } catch (err) {
         console.log("Sidebar is closed. Note saved successfully.")
     }
+}
+
+function highlightText(id, start, end, startOffset, endOffset) {
+    var mark = document.createElement("mark")
+    mark.setAttribute("annotaterId", id)
+    var nodes = getNodesInRange(start, end)
+    nodes.forEach((node) => {
+        mark = document.createElement("mark")
+        node.parentNode.replaceChild(mark, node)
+        mark.appendChild(node)
+        if (node.isEqualNode(start) && node.nodeType == Node.TEXT_NODE) {
+            var newText = document.createTextNode(node.textContent.substring(0, startOffset))
+            node.textContent = node.textContent.substring(startOffset)
+            mark.parentNode.insertBefore(newText, mark)
+        } else if (node.isEqualNode(end) && node.nodeType == Node.TEXT_NODE) {
+            var newText = document.createTextNode(node.textContent.substring(endOffset))
+            node.textContent = node.textContent.substring(0, endOffset)
+            mark.parentNode.replaceChild(newText, mark)
+            newText.parentElement.insertBefore(mark, newText)
+        }
+    })
+    // TODO: Do I need startNode/endNode/startOffset/endOffset
+    return [`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`]
 }
 
 // Similar process to highlightTextReceived
@@ -113,7 +106,7 @@ function annotateTextReceived(request, sender, sendResponse) {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
-        browser.runtime.sendMessage({type: "annotate-text", id: `annotater${id}`, content: range.toString(), annotation: note})
+        browser.runtime.sendMessage({type: "annotate-text", id: `${id}`, content: range.toString(), annotation: note})
     } catch (err) {
         console.log(err)
     }
@@ -140,10 +133,22 @@ function refreshSidebar() {
             if (item.type == "note") {
                 browser.runtime.sendMessage({type: "annotate-text", id: key, content: item.content, annotation: item.note})
             } else {
-                browser.runtime.sendMessage({type: "highlight-text", id: key, content: item.range})
+                browser.runtime.sendMessage({type: "highlight-text", id: key, content: item.range}) // TODO: Modify this to comply localStorage schema
             }
         }
     }
+}
+
+function checkAnnotatedNode(node, notes) {
+    let iter = notes.key
+    let currKey = iter.next()
+    while (!notes.done) {
+        if (node.isEqualNode(notes.getItem(currKey))) {
+            return currKey
+        }
+        currKey = notes.next()
+    }
+    return null
 }
 
 function reannotate() {
@@ -154,8 +159,20 @@ function reannotate() {
             notes.set(key, JSON.parse(localStorage.getItem(key)))
         }
     }
-    let body = document.body;
-    // domTraverse(body)
+    var body = document.body;
+    var node = body.firstChild
+    while (node != null) {
+        let key = checkAnnotatedNode(node, notes)
+        if (key) {
+            let note = JSON.parse(localStorage.getItem(key))
+            if (note.type == "highlight") {
+                highlightText(note.id, note.start, note.startOffset, note.end, note.endOffset) // TODO: Adjust highlight text to not add to localStorage every time.
+            } else {
+                annotateText(note.id, note.start, note.startOffset, note.end, note.endOffset) // TODO: Actually implement annotateText
+            }
+        }
+        node = getNextNode(node)
+    }
 }
 
 browser.runtime.onMessage.addListener((command, tab) => {
@@ -171,8 +188,6 @@ browser.runtime.onMessage.addListener((command, tab) => {
     }
 })
 
-domain = window.location.href
+website = window.location.href
 url = domain.substring(domain.lastIndexOf("/"))
-
-console.log(domain, url)
 reannotate()
