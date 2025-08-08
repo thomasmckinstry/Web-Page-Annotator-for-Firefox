@@ -41,7 +41,10 @@ function highlightTextReceived(request, sender, sendResponse) {
     var startOffset = range.startOffset
     var end = range.endContainer
     var endOffset = range.endOffset
-    let note = highlightText(id, start, end, startOffset, endOffset)
+    highlightText(id, start, end, startOffset, endOffset)
+    let note = [`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`]
+    // TODO: Do I need startNode/endNode/startOffset/endOffset if that is all contained in range.
+    // TODO: This does not put in identifiable information for the nodes. (Look at JSON.stringify())
     localStorage.setItem(note[0], note[1])
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -61,24 +64,34 @@ function highlightText(id, start, end, startOffset, endOffset) {
     var endClone = end.cloneNode()
     var mark = document.createElement("mark")
     mark.setAttribute("annotaterId", id)
+    if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
+        var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
+        var endText = document.createTextNode(endClone.textContent.substring(endOffset))
+        var markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
+        mark.appendChild(markText)
+        start.parentNode.replaceChild(endText, start)
+        endText.parentNode.insertBefore(mark, endText)
+        mark.parentNode.insertBefore(startText, mark)
+        return   
+    }
     var nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
         mark = document.createElement("mark")
         node.parentNode.replaceChild(mark, node)
         mark.appendChild(node)
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
+            console.log("Start offset", node, startOffset)
             var newText = document.createTextNode(node.textContent.substring(0, startOffset))
             node.textContent = node.textContent.substring(startOffset)
             mark.parentNode.insertBefore(newText, mark)
         } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
+            console.log("End offset", node, endOffset)
             var newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
             mark.parentNode.replaceChild(newText, mark)
             newText.parentElement.insertBefore(mark, newText)
         }
     })
-    // TODO: Do I need startNode/endNode/startOffset/endOffset
-    return [`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`]
 }
 
 // Similar process to highlightTextReceived
@@ -143,7 +156,8 @@ function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
     while (currKey != null) {
-        if (node.isEqualNode(notes.get(currKey))) {
+        console.log(notes.get(currKey))
+        if (node.isEqualNode(notes.get(currKey).startNode)) {
             return currKey
         }
         currKey = iter.next().value
