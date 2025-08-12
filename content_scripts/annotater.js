@@ -36,24 +36,29 @@ function highlightTextReceived(request, sender, sendResponse) {
         window.alert("Can only highlight one range at a time.")
         return
     }
-    var range = selection.getRangeAt(0)
-    var start = range.startContainer
-    var startOffset = range.startOffset
-    var end = range.endContainer
-    var endOffset = range.endOffset
+    var selectedRange = selection.getRangeAt(0)
+    var start = selectedRange.startContainer
+    var startOffset = selectedRange.startOffset
+    var end = selectedRange.endContainer
+    var endOffset = selectedRange.endOffset
+    let storedNote = {
+        type: "highlight",
+        id: id,
+        startData: start.data,
+        endData: end.data,
+        startOffset: startOffset,
+        endOffset: endOffset
+    }
     highlightText(id, start, end, startOffset, endOffset)
-    let note = [`annotater${id}${url}`, `{ "type": "highlight", "range": "${range}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`]
-    // TODO: Do I need startNode/endNode/startOffset/endOffset if that is all contained in range.
-    // TODO: This does not put in identifiable information for the nodes. (Look at JSON.stringify())
-    localStorage.setItem(note[0], note[1])
+    localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
-        localStorage.setItem("annotationCount", localStorage.getItem("annotationCount") + 1)
+        localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1)
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics)
-        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: range.toString()})
+        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: selectedRange.toString()})
     } catch (err) {
         console.log("Sidebar is closed. Note saved successfully.")
     }
@@ -115,13 +120,23 @@ function annotateTextReceived(request, sender, sendResponse) {
     var startOffset = range.startOffset
     var end = range.endContainer
     var endOffset = range.endOffset
+    let storedNote = {
+        type: "note",
+        id: id,
+        startData: start.data,
+        endData: end.data,
+        startOffset: startOffset,
+        endOffset: endOffset,
+        annotation: note
+    }
+    console.log(storedNote.range)
     annotateText(id, start, end, startOffset, endOffset, note)
     // TODO: This does not save a usable object, look into JSON.stringify()
-    localStorage.setItem(`annotater${id}${url}`, `{ "type": "note", "range": "${range}", "annotation": "${note}", "startNode": "${range.startContainer}", "endNode":"${range.endContainer}", "startOffset":"${range.startOffset}", "endOffset":"${range.endOffset}"}`)
+    localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
-        localStorage.setItem("annotationCount", localStorage.getItem("annotationCount") + 1) // TODO: This adds 1 to a string
+        localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1) // TODO: This adds 1 to a string
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
@@ -133,6 +148,7 @@ function annotateTextReceived(request, sender, sendResponse) {
 
 // Operates similarly to highlightText. Additional complication in that instead of <mark> selection must be placed in a <span> that has a script to popup the note that was made.
 function annotateText(id, start, end, startOffset, endOffset, note) {
+    console.log(id, note)
     var startClone = start.cloneNode()
     var endClone = end.cloneNode()
     var span = document.createElement("span")
@@ -186,6 +202,8 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         }
     })
     popup.style.display = "none"
+    popup.style.backgroundColor = "light-gray"
+    popup.style.padding = "15px"
     popup.style.color = "red" // TODO: Remove this
     popup.style.position = "absolute" // TODO: Style this properly
     span.appendChild(popup)
@@ -222,13 +240,22 @@ function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
     while (currKey != null) {
-        console.log(notes.get(currKey))
-        if (node.isEqualNode(notes.get(currKey).startNode)) {
+        if (notes.get(currKey).startData === node.data) {
             return currKey
         }
         currKey = iter.next().value
     }
     return null
+}
+
+function findEnd(start, endData) {
+    var node;
+    for (node = start; node; node = getNextNode(node))
+    {
+        if (node.data === endData)
+            break;
+    }
+    return node;
 }
 
 function reannotate() {
@@ -245,9 +272,11 @@ function reannotate() {
         let key = checkAnnotatedNode(node, notes)
         if (key) {
             let note = JSON.parse(localStorage.getItem(key))
+            let end = findEnd(node, note.endData)
             if (note.type == "highlight") {
-                highlightText(note.id, note.start, note.startOffset, note.end, note.endOffset)
-                // annotateText(note.id, note.start, note.startOffset, note.end, note.endOffset) // TODO: Actually implement annotateText
+                highlightText(note.id, node, end, note.startOffset, note.endOffset)
+            } else {
+                annotateText(note.id, node, end, note.startOffset, note.endOffset, note.annotation)
             }
         }
         node = getNextNode(node)
