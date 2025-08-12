@@ -70,6 +70,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
     var mark = document.createElement("mark")
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
         mark.setAttribute("annotaterId", id)
+        mark.className = "highlight"
         var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
         var endText = document.createTextNode(endClone.textContent.substring(endOffset))
         var markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
@@ -83,6 +84,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
     nodes.forEach((node) => {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) {
             mark = document.createElement("mark")
+            mark.className = "highlight"
             mark.setAttribute("annotaterId", id)
             node.parentNode.replaceChild(mark, node)
         }
@@ -152,7 +154,9 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     var startClone = start.cloneNode()
     var endClone = end.cloneNode()
     var span = document.createElement("span")
+    span.className = "annotation"
     var popup = document.createElement("span")
+    popup.className = "popup"
     popup.textContent = note
     popup.class = `annotater-popup${id}`
     span.setAttribute("annotaterId", id)
@@ -164,9 +168,6 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         start.parentNode.replaceChild(endText, start)
         endText.parentNode.insertBefore(span, endText)
         span.parentNode.insertBefore(startText, span)
-        popup.style.display = "none"
-        popup.style.color = "red" // TODO: Remove this
-        popup.style.position = "absolute"
         span.appendChild(popup)
         span.addEventListener("mouseenter", () => {
             popup.style.display = "block"
@@ -180,6 +181,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     nodes.forEach((node) => {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(span.parentNode)) {
             span = document.createElement("span")
+            span.className = "annotation"
             span.setAttribute("annotaterId", id)
             node.parentNode.replaceChild(span, node)
             span.addEventListener("mouseenter", () => {
@@ -201,12 +203,8 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
             newText.parentElement.insertBefore(span, newText)
         }
     })
-    popup.style.display = "none"
-    popup.style.backgroundColor = "light-gray"
-    popup.style.padding = "15px"
-    popup.style.color = "red" // TODO: Remove this
-    popup.style.position = "absolute" // TODO: Style this properly
-    span.appendChild(popup)
+    span.parentElement.replaceChild(popup, span) // TODO: Look at replacing this with "insertAdjacentElement"
+    popup.parentElement.insertBefore(span, popup)
 }
 
 function getId() {
@@ -296,6 +294,35 @@ browser.runtime.onMessage.addListener((command, tab) => {
     }
 })
 
+function modifyStylesheet() {
+    let head = document.getElementsByTagName("head")[0]
+    let style = document.createElement("style")
+    var css = `
+        .highlight {
+            background: greenyellow;
+        }
+
+        .annotation {
+            text-shadow: 0 0 1em red;
+        }
+
+        .popup {
+            color: red;
+            background-color: lightgrey;
+            padding: 5px;
+            position: absolute;
+        }   
+    `
+    if (style.styleSheet) {
+        // Required for IE8 and below
+        style.styleSheet.cssText = css;
+    } else {
+        style.appendChild(document.createTextNode(css));
+    }
+    head.appendChild(style)
+}
+
 website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
 reannotate()
+modifyStylesheet()
