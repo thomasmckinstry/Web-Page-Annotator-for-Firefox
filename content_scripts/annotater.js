@@ -47,7 +47,8 @@ function highlightTextReceived(request, sender, sendResponse) {
         startData: start.data,
         endData: end.data,
         startOffset: startOffset,
-        endOffset: endOffset
+        endOffset: endOffset,
+        content: selectedRange.toString()
     }
     highlightText(id, start, end, startOffset, endOffset)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
@@ -129,7 +130,8 @@ function annotateTextReceived(request, sender, sendResponse) {
         endData: end.data,
         startOffset: startOffset,
         endOffset: endOffset,
-        annotation: note
+        annotation: note,
+        content: range.toString()
     }
     console.log(storedNote.range)
     annotateText(id, start, end, startOffset, endOffset, note)
@@ -226,9 +228,9 @@ function refreshSidebar() {
         if (key.includes("annotater") && key.includes(url)) {
             let item = JSON.parse(localStorage.getItem(key))
             if (item.type == "note") {
-                browser.runtime.sendMessage({type: "annotate-text", id: key, content: item.content, annotation: item.note})
+                browser.runtime.sendMessage({type: "annotate-text", id: key, content: item.content, annotation: item.annotation})
             } else {
-                browser.runtime.sendMessage({type: "highlight-text", id: key, content: item.range})
+                browser.runtime.sendMessage({type: "highlight-text", id: key, content: item.content})
             }
         }
     }
@@ -299,16 +301,19 @@ function modifyStylesheet() {
     let style = document.createElement("style")
     var css = `
         .highlight {
-            background: greenyellow;
+            background: yellow;
         }
 
         .annotation {
-            text-shadow: 0 0 1em red;
+            text-shadow: 0 0 0.2em orange;
         }
 
         .popup {
-            color: red;
-            background-color: lightgrey;
+            background-color: white;
+            border: solid;
+            border-color: black;
+            border-width: 2px;
+            border-radius: 6px;
             padding: 5px;
             position: absolute;
         }   
