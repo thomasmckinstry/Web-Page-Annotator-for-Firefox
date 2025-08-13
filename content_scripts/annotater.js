@@ -79,7 +79,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
         start.parentNode.replaceChild(endText, start)
         endText.parentNode.insertBefore(mark, endText)
         mark.parentNode.insertBefore(startText, mark)
-        return   
+        return endText
     }
     var nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
@@ -101,6 +101,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
             newText.parentElement.insertBefore(mark, newText)
         }
     })
+    return mark
 }
 
 // Similar process to highlightTextReceived
@@ -134,12 +135,11 @@ function annotateTextReceived(request, sender, sendResponse) {
         content: range.toString()
     }
     annotateText(id, start, end, startOffset, endOffset, note)
-    // TODO: This does not save a usable object, look into JSON.stringify()
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
     } else {
-        localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1) // TODO: This adds 1 to a string
+        localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1)
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
@@ -168,14 +168,14 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         start.parentNode.replaceChild(endText, start)
         endText.parentNode.insertBefore(span, endText)
         span.parentNode.insertBefore(startText, span)
-        span.appendChild(popup)
+        span.parentNode.insertBefore(popup, span)
         span.addEventListener("mouseenter", () => {
             popup.style.display = "block"
         });
         span.addEventListener("mouseleave", () => {
             popup.style.display = "none"
         });
-        return   
+        return span 
     }
     var nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
@@ -203,8 +203,8 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
             newText.parentElement.insertBefore(span, newText)
         }
     })
-    span.parentElement.replaceChild(popup, span) // TODO: Look at replacing this with "insertAdjacentElement"
-    popup.parentElement.insertBefore(span, popup)
+    span.parentElement.insertBefore(popup, span)
+    return span
 }
 
 function getId() {
@@ -237,7 +237,6 @@ function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
     while (currKey != null) {
-        // console.log(notes.get(currKey).startData, node.textContent)
         if (notes.get(currKey).startData === node.textContent) {
             return currKey
         }
@@ -248,7 +247,7 @@ function checkAnnotatedNode(node, notes) {
 
 function findEnd(start, endData) {
     var node;
-    for (node = start; node; node = getNextNode(node))
+    for (node = start; node != null; node = getNextNode(node))
     {
         if (node.data === endData)
             break;
@@ -257,10 +256,11 @@ function findEnd(start, endData) {
 }
 
 function reannotate() {
+    console.log("reannotate")
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
-        if (key.includes("annotater")) {
+        if (key.includes("annotater") && key.includes(url)) {
             notes.set(key, JSON.parse(localStorage.getItem(key)))
         }
     }
@@ -268,15 +268,15 @@ function reannotate() {
     var body = document.body;
     var node = body.firstChild
     while (node != null) {
-        console.log(node)
         let key = checkAnnotatedNode(node, notes)
         if (key) {
+            console.log(key)
             let note = JSON.parse(localStorage.getItem(key))
             let end = findEnd(node, note.endData)
             if (note.type == "highlight") {
-                highlightText(note.id, node, end, note.startOffset, note.endOffset)
+                node = highlightText(note.id, node, end, note.startOffset, note.endOffset)
             } else {
-                annotateText(note.id, node, end, note.startOffset, note.endOffset, note.annotation)
+                node = annotateText(note.id, node, end, note.startOffset, note.endOffset, note.annotation)
             }
         }
         node = getNextNode(node)
