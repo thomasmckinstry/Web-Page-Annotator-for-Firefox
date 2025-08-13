@@ -44,7 +44,6 @@ function displayAnnotation(message) {
 }
 
 function  refreshNotes(windowInfo) {
-  console.log("refresh")
   while (notes.firstChild) {
     notes.removeChild(notes.firstChild);
   }

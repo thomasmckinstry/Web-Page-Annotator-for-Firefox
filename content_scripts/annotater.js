@@ -44,8 +44,8 @@ function highlightTextReceived(request, sender, sendResponse) {
     let storedNote = {
         type: "highlight",
         id: id,
-        startData: start.data,
-        endData: end.data,
+        startData: start.textContent,
+        endData: end.textContent,
         startOffset: startOffset,
         endOffset: endOffset,
         content: selectedRange.toString()
@@ -59,7 +59,7 @@ function highlightTextReceived(request, sender, sendResponse) {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics)
-        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: selectedRange.toString()})
+        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: storedNote.content})
     } catch (err) {
         console.log("Sidebar is closed. Note saved successfully.")
     }
@@ -126,14 +126,13 @@ function annotateTextReceived(request, sender, sendResponse) {
     let storedNote = {
         type: "note",
         id: id,
-        startData: start.data,
-        endData: end.data,
+        startData: start.textContent,
+        endData: end.textContent,
         startOffset: startOffset,
         endOffset: endOffset,
         annotation: note,
         content: range.toString()
     }
-    console.log(storedNote.range)
     annotateText(id, start, end, startOffset, endOffset, note)
     // TODO: This does not save a usable object, look into JSON.stringify()
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
@@ -152,7 +151,6 @@ function annotateTextReceived(request, sender, sendResponse) {
 
 // Operates similarly to highlightText. Additional complication in that instead of <mark> selection must be placed in a <span> that has a script to popup the note that was made.
 function annotateText(id, start, end, startOffset, endOffset, note) {
-    console.log(id, note)
     var startClone = start.cloneNode()
     var endClone = end.cloneNode()
     var span = document.createElement("span")
@@ -224,7 +222,6 @@ function getId() {
 function refreshSidebar() {
     for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
-
         if (key.includes("annotater") && key.includes(url)) {
             let item = JSON.parse(localStorage.getItem(key))
             if (item.type == "note") {
@@ -240,7 +237,8 @@ function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
     while (currKey != null) {
-        if (notes.get(currKey).startData === node.data) {
+        // console.log(notes.get(currKey).startData, node.textContent)
+        if (notes.get(currKey).startData === node.textContent) {
             return currKey
         }
         currKey = iter.next().value
@@ -260,15 +258,17 @@ function findEnd(start, endData) {
 
 function reannotate() {
     let notes = new Map();
-    for (i = 0; i < localStorage.length; i ++) {
+    for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
         if (key.includes("annotater")) {
             notes.set(key, JSON.parse(localStorage.getItem(key)))
         }
     }
+    console.log(notes)
     var body = document.body;
     var node = body.firstChild
-    while (node != null) { // TODO: This is an infinite (or very slow) loop.
+    while (node != null) {
+        console.log(node)
         let key = checkAnnotatedNode(node, notes)
         if (key) {
             let note = JSON.parse(localStorage.getItem(key))
