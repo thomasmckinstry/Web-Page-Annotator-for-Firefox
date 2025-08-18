@@ -132,7 +132,7 @@ function annotateTextReceived(request, sender, sendResponse) {
         startOffset: startOffset,
         endOffset: endOffset,
         annotation: note,
-        content: range.toString()
+        content: range.toString() // TODO:
     }
     annotateText(id, start, end, startOffset, endOffset, note)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
@@ -143,7 +143,7 @@ function annotateTextReceived(request, sender, sendResponse) {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
-        browser.runtime.sendMessage({type: "annotate-text", id: `${id}`, content: range.toString(), annotation: note})
+        browser.runtime.sendMessage({type: "annotate-text", id: `${id}`, content: storedNote.content, annotation: note})
     } catch (err) {
         console.log(err)
     }
@@ -245,6 +245,7 @@ function checkAnnotatedNode(node, notes) {
     return null
 }
 
+// Locates and returns a node object matching endData
 function findEnd(start, endData) {
     var node;
     for (node = start; node != null; node = getNextNode(node))
@@ -255,6 +256,7 @@ function findEnd(start, endData) {
     return node;
 }
 
+// TODO: On some website the reannotation will highlight an entire node rather than just the originally selected portion. This could be resulting from more dynamic pages changing in the process of annotating.
 function reannotate() {
     console.log("reannotate")
     let notes = new Map();
@@ -313,8 +315,8 @@ function modifyStylesheet() {
             border: solid;
             border-color: black;
             border-width: 2px;
-            border-radius: 6px;
-            padding: 5px;
+            border-radius: 5px;
+            padding: 10px;
             position: absolute;
         }   
     `

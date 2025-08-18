@@ -22,26 +22,33 @@ function handleMessage(command) {
 }
 
 // Creates the context menu buttons for interaction
-browser.menus.create({
-    id: "highlight-selection",
-    title: browser.i18n.getMessage("selectedTextHighlight"),
-    contexts: ["selection"],
-}, onCreated);
+function createButtons() {
+  browser.menus.create({
+      id: "highlight-selection",
+      title: browser.i18n.getMessage("selectedTextHighlight"),
+      contexts: ["selection"],
+  }, onCreated);
 
-browser.menus.create({
-    id: "annotate-selection",
-    title: browser.i18n.getMessage("selectedTextAnnotation"),
-    contexts: ["selection"],
-}, onCreated);
+  browser.menus.create({
+      id: "annotate-selection",
+      title: browser.i18n.getMessage("selectedTextAnnotation"),
+      contexts: ["selection"],
+  }, onCreated);
+}
 
-browser.menus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "highlight-selection" || info.menuItemId === "annotate-selection") {
-    handleMessage(info.menuItemId)
-  }
-});
-
-browser.commands.onCommand.addListener((command, tab) => {
-    if (command === "highlight-selection" || command === "annotate-selection") {
-      handleMessage(command)
+function addListeners() {
+  browser.menus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "highlight-selection" || info.menuItemId === "annotate-selection") {
+      handleMessage(info.menuItemId)
     }
-});
+  });
+
+  browser.commands.onCommand.addListener((command, tab) => {
+      if (command === "highlight-selection" || command === "annotate-selection") {
+        handleMessage(command)
+      }
+  });
+}
+
+createButtons()
+addListeners()

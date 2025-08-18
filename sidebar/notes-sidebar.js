@@ -1,35 +1,26 @@
 let myWindowId
-let notes = document.querySelector("#notes")
+let notes = document.querySelector(".notes-window")
 
 function displayHighlight(message) {
-  if (!notes) {
-    window.alert("Sidebar must be open.")
-  }
   var newNote = document.createElement('div')
   newNote.className = "note" 
   newNote.setAttribute("annotaterId", message.id)
-  newNote.innerHTML = `<div class="note">
-                        <div class="note-header" id="highlight">
+  newNote.innerHTML = `<div class="note-header" id="highlight">
                           <img class="note-icon" src="/icons/highlighter.jpeg" alt="highlighted text">
                           <div style="margin-left: auto;">
                             <button class="button" type="image"><img class="note-icon" src="/icons/delete.jpeg"></button> 
                             <button class="button" type="image"><img class="note-icon" src="/icons/hyperlink.jpeg"></a></button>
                           </div>
                         </div>
-                        <p class="note-text">${message.content}</p>
-                      </div>`
+                        <p class="note-text">${message.content}</p>`
   notes.appendChild(newNote)
 }
 
 function displayAnnotation(message) {
-  if (!notes) {
-    window.alert("Sidebar must be open.")
-  }
   var newNote = document.createElement('div')
   newNote.className = "note" 
   newNote.setAttribute("annotaterId", message.id)
-  newNote.innerHTML = `<div class="note">
-                        <div class="note-header" id="annotation">
+  newNote.innerHTML = `<div class="note-header" id="annotation">
                           <img class="note-icon" src="/icons/notepad.jpeg" alt="annotated text">
                           <div style="margin-left: auto;">
                             <button class="button" type="image"><img class="note-icon" src="/icons/delete.jpeg"></button> 
@@ -38,8 +29,7 @@ function displayAnnotation(message) {
                           </div>
                         </div>
                         <p class="note-text">${message.annotation}</p>
-                        <p class="note-text">${message.content}</p>
-                      </div>`
+                        <p class="note-text">${message.content}</p>`
   notes.appendChild(newNote)
 }
 
@@ -60,15 +50,9 @@ function  refreshNotes(windowInfo) {
   } 
 }
 
-/*
-Update content when a new tab becomes active.
-*/
-browser.tabs.onActivated.addListener(refreshNotes);
-
-/*
-Update content when a new page is loaded into a tab.
-*/
-browser.tabs.onUpdated.addListener(refreshNotes);
+function scrollToNote() {
+  
+}
 
 /*
 When the sidebar loads, get the ID of its window,
@@ -79,7 +63,15 @@ browser.windows.getCurrent({populate: true}).then((windowInfo) => {
   refreshNotes(windowInfo);
 });
 
-browser.runtime.onMessage.addListener((message) => {
+function addListeners() {
+  // Update content when a new tab becomes active.
+  browser.tabs.onActivated.addListener(refreshNotes);
+
+  // Update content when a new page is loaded into a tab.
+  browser.tabs.onUpdated.addListener(refreshNotes);
+
+  // Add listeners for events from content_scripts
+  browser.runtime.onMessage.addListener((message) => {
   switch (message.type){
     case "highlight-text":
       displayHighlight(message)
@@ -88,4 +80,7 @@ browser.runtime.onMessage.addListener((message) => {
       displayAnnotation(message)
       break;
   }  
-})
+  })
+}
+
+addListeners()
