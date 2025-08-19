@@ -15,8 +15,8 @@ function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
 
 function getNodesInRange(start, end) // Partially taken from https://stackoverflow.com/a/7931003
 {
-    var nodes = [];
-    var node;
+    let nodes = [];
+    let node;
     for (node = start; node; node = getNextNode(node))
     {
         nodes.push(node);
@@ -27,20 +27,19 @@ function getNodesInRange(start, end) // Partially taken from https://stackoverfl
     return nodes;
 }
 
-// Needs to use a listener, can't be directly called by background script
-function highlightTextReceived(request, sender, sendResponse) {
-    var selection = document.getSelection()
-    var id = getId() // Will be used to identify the new <mark> and note in local storage
+function highlightTextReceived() {
+    let selection = document.getSelection()
+    let id = getId() // Will be used to identify the new <mark> and note in local storage
     // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension.
     if (selection.rangeCount > 1) {
         window.alert("Can only highlight one range at a time.")
         return
     }
-    var selectedRange = selection.getRangeAt(0)
-    var start = selectedRange.startContainer
-    var startOffset = selectedRange.startOffset
-    var end = selectedRange.endContainer
-    var endOffset = selectedRange.endOffset
+    let selectedRange = selection.getRangeAt(0)
+    let start = selectedRange.startContainer
+    let startOffset = selectedRange.startOffset
+    let end = selectedRange.endContainer
+    let endOffset = selectedRange.endOffset
     let storedNote = {
         type: "highlight",
         id: id,
@@ -58,7 +57,6 @@ function highlightTextReceived(request, sender, sendResponse) {
         localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1)
     }
     try {
-        // TODO: range.toString() can return gibberish in certain cases (See phonetics)
         browser.runtime.sendMessage({type: "highlight-text", id: `annotater${id}${url}`, content: storedNote.content})
     } catch (err) {
         console.log("Sidebar is closed. Note saved successfully.")
@@ -66,22 +64,22 @@ function highlightTextReceived(request, sender, sendResponse) {
 }
 
 function highlightText(id, start, end, startOffset, endOffset) {
-    var startClone = start.cloneNode()
-    var endClone = end.cloneNode()
-    var mark = document.createElement("mark")
+    let startClone = start.cloneNode()
+    let endClone = end.cloneNode()
+    let mark = document.createElement("mark")
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
         mark.setAttribute("id", id)
         mark.className = "highlight"
-        var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
-        var endText = document.createTextNode(endClone.textContent.substring(endOffset))
-        var markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
+        let startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
+        let endText = document.createTextNode(endClone.textContent.substring(endOffset))
+        let markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
         mark.appendChild(markText)
         start.parentNode.replaceChild(endText, start)
         endText.parentNode.insertBefore(mark, endText)
         mark.parentNode.insertBefore(startText, mark)
         return endText
     }
-    var nodes = getNodesInRange(start, end)
+    let nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) {
             mark = document.createElement("mark")
@@ -91,11 +89,11 @@ function highlightText(id, start, end, startOffset, endOffset) {
         }
         mark.appendChild(node)
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
-            var newText = document.createTextNode(node.textContent.substring(0, startOffset))
+            let newText = document.createTextNode(node.textContent.substring(0, startOffset))
             node.textContent = node.textContent.substring(startOffset)
             mark.parentNode.insertBefore(newText, mark)
         } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
-            var newText = document.createTextNode(node.textContent.substring(endOffset))
+            let newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
             mark.parentNode.replaceChild(newText, mark)
             newText.parentElement.insertBefore(mark, newText)
@@ -104,26 +102,21 @@ function highlightText(id, start, end, startOffset, endOffset) {
     return mark
 }
 
-// Similar process to highlightTextReceived
-// Call a separate function annotateText(). Find the selection and place it all into a span.
-// The event listeners will be added to the element that is created upon the annotation.
-// Some style aspect should be changed to indicate that a section of text is annotated
-// An additional popup has to exist to receive the note text.
-function annotateTextReceived(request, sender, sendResponse) {
-    var selection = document.getSelection()
+function annotateTextReceived() {
+    let selection = document.getSelection()
     let note = prompt("Enter Note.")
-    var id = getId()
+    let id = getId()
     
     if (selection.rangeCount > 1)  {
         window.alert("Can only annotate one range at a time.")
         return
     }
 
-    var range = selection.getRangeAt(0)
-    var start = range.startContainer
-    var startOffset = range.startOffset
-    var end = range.endContainer
-    var endOffset = range.endOffset
+    let range = selection.getRangeAt(0)
+    let start = range.startContainer
+    let startOffset = range.startOffset
+    let end = range.endContainer
+    let endOffset = range.endOffset
     let storedNote = {
         type: "note",
         id: id,
@@ -149,21 +142,20 @@ function annotateTextReceived(request, sender, sendResponse) {
     }
 }
 
-// Operates similarly to highlightText. Additional complication in that instead of <mark> selection must be placed in a <span> that has a script to popup the note that was made.
 function annotateText(id, start, end, startOffset, endOffset, note) {
-    var startClone = start.cloneNode()
-    var endClone = end.cloneNode()
-    var span = document.createElement("span")
+    let startClone = start.cloneNode()
+    let endClone = end.cloneNode()
+    let span = document.createElement("span")
     span.className = "annotation"
-    var popup = document.createElement("span")
+    let popup = document.createElement("span")
     popup.className = "popup"
     popup.textContent = note
     popup.class = `annotater-popup${id}`
     span.setAttribute("id", id)
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
-        var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
-        var endText = document.createTextNode(endClone.textContent.substring(endOffset))
-        var spanText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
+        let startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
+        let endText = document.createTextNode(endClone.textContent.substring(endOffset))
+        let spanText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
         span.appendChild(spanText)
         start.parentNode.replaceChild(endText, start)
         endText.parentNode.insertBefore(span, endText)
@@ -177,7 +169,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         });
         return span 
     }
-    var nodes = getNodesInRange(start, end)
+    let nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(span.parentNode)) {
             span = document.createElement("span")
@@ -193,11 +185,11 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         }
         span.appendChild(node)
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
-            var newText = document.createTextNode(node.textContent.substring(0, startOffset))
+            let newText = document.createTextNode(node.textContent.substring(0, startOffset))
             node.textContent = node.textContent.substring(startOffset)
             span.parentNode.insertBefore(newText, span)
         } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
-            var newText = document.createTextNode(node.textContent.substring(endOffset))
+            let newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
             span.parentNode.replaceChild(newText, span)
             newText.parentElement.insertBefore(span, newText)
@@ -208,8 +200,8 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
 }
 
 function getId() {
-    var note = localStorage.getItem(`annotater0${url}`)
-    var id = 0;
+    let note = localStorage.getItem(`annotater0${url}`)
+    let id = 0;
 
     while (note != null) {
         id += 1
@@ -245,9 +237,8 @@ function checkAnnotatedNode(node, notes) {
     return null
 }
 
-// Locates and returns a node object matching endData
 function findEnd(start, endData) {
-    var node;
+    let node;
     for (node = start; node != null; node = getNextNode(node))
     {
         if (node.data === endData)
@@ -264,8 +255,8 @@ function reannotate() {
             notes.set(key, JSON.parse(localStorage.getItem(key)))
         }
     }
-    var body = document.body;
-    var node = body.firstChild
+    let body = document.body;
+    let node = body.firstChild
     while (node != null) {
         let key = checkAnnotatedNode(node, notes)
         if (key) {
@@ -297,7 +288,7 @@ function deleteNote(id) {
 }
 
 function editNote(id, note) {
-    var storedNote = JSON.parse(localStorage.getItem(id))
+    let storedNote = JSON.parse(localStorage.getItem(id))
     storedNote.annotation = note
     localStorage.setItem(id, JSON.stringify(storedNote))
 }
@@ -328,7 +319,7 @@ browser.runtime.onMessage.addListener((command, tab) => {
 function modifyStylesheet() {
     let head = document.getElementsByTagName("head")[0]
     let style = document.createElement("style")
-    var css = `
+    let css = `
         .highlight {
             background: yellow;
         }
