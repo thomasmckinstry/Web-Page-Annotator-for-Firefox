@@ -50,7 +50,7 @@ function highlightTextReceived(request, sender, sendResponse) {
         endOffset: endOffset,
         content: selectedRange.toString()
     }
-    highlightText(id, start, end, startOffset, endOffset)
+    highlightText(`annotater${id}${url}`, start, end, startOffset, endOffset)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -70,7 +70,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
     var endClone = end.cloneNode()
     var mark = document.createElement("mark")
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
-        mark.setAttribute("annotaterId", id)
+        mark.setAttribute("id", id)
         mark.className = "highlight"
         var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
         var endText = document.createTextNode(endClone.textContent.substring(endOffset))
@@ -86,7 +86,7 @@ function highlightText(id, start, end, startOffset, endOffset) {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) {
             mark = document.createElement("mark")
             mark.className = "highlight"
-            mark.setAttribute("annotaterId", id)
+            mark.setAttribute("id", id)
             node.parentNode.replaceChild(mark, node)
         }
         mark.appendChild(node)
@@ -134,7 +134,7 @@ function annotateTextReceived(request, sender, sendResponse) {
         annotation: note,
         content: range.toString() // TODO:
     }
-    annotateText(id, start, end, startOffset, endOffset, note)
+    annotateText(`annotater${id}${url}`, start, end, startOffset, endOffset, note)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -143,7 +143,7 @@ function annotateTextReceived(request, sender, sendResponse) {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
-        browser.runtime.sendMessage({type: "annotate-text", id: `${id}`, content: storedNote.content, annotation: note})
+        browser.runtime.sendMessage({type: "annotate-text", id: `annotater${id}${url}`, content: storedNote.content, annotation: note})
     } catch (err) {
         console.log(err)
     }
@@ -159,7 +159,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     popup.className = "popup"
     popup.textContent = note
     popup.class = `annotater-popup${id}`
-    span.setAttribute("annotaterId", id)
+    span.setAttribute("id", id)
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
         var startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
         var endText = document.createTextNode(endClone.textContent.substring(endOffset))
@@ -182,7 +182,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         if (node.isEqualNode(start) || !node.parentNode.isEqualNode(span.parentNode)) {
             span = document.createElement("span")
             span.className = "annotation"
-            span.setAttribute("annotaterId", id)
+            span.setAttribute("id", id)
             node.parentNode.replaceChild(span, node)
             span.addEventListener("mouseenter", () => {
                 popup.style.display = "block"
@@ -256,9 +256,7 @@ function findEnd(start, endData) {
     return node;
 }
 
-// TODO: On some website the reannotation will highlight an entire node rather than just the originally selected portion. This could be resulting from more dynamic pages changing in the process of annotating.
 function reannotate() {
-    console.log("reannotate")
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
@@ -266,27 +264,41 @@ function reannotate() {
             notes.set(key, JSON.parse(localStorage.getItem(key)))
         }
     }
-    console.log(notes)
     var body = document.body;
     var node = body.firstChild
     while (node != null) {
         let key = checkAnnotatedNode(node, notes)
         if (key) {
-            console.log(key)
             let note = JSON.parse(localStorage.getItem(key))
             let end = findEnd(node, note.endData)
             if (note.type == "highlight") {
-                node = highlightText(note.id, node, end, note.startOffset, note.endOffset)
+                node = highlightText(key, node, end, note.startOffset, note.endOffset)
             } else {
-                node = annotateText(note.id, node, end, note.startOffset, note.endOffset, note.annotation)
+                node = annotateText(key, node, end, note.startOffset, note.endOffset, note.annotation)
             }
         }
         node = getNextNode(node)
     }
 }
 
+function scrollToNote(id) {
+    let element = document.getElementById(id)
+    element.scrollIntoView()
+}
+
+function deleteNote(id) {
+    console.log("deleting", id)
+    for (i = 0; i < localStorage.length; i++) {
+        console.log(localStorage.key(i))
+        if (id == localStorage.key(i)) {
+            localStorage.removeItem(localStorage.key(i))
+            break;
+        }
+    }
+}
+
 browser.runtime.onMessage.addListener((command, tab) => {
-    switch (command) {
+    switch (command.type) {
         case "highlight-selection":
             highlightTextReceived()
             break;
@@ -295,6 +307,13 @@ browser.runtime.onMessage.addListener((command, tab) => {
             break;
         case "refresh-sidebar":
             refreshSidebar()
+            break;
+        case "scroll-to-note":
+            scrollToNote(command.id)
+            break;
+        case "delete-note":
+            deleteNote(command.id)
+            break;
     }
 })
 
@@ -331,5 +350,6 @@ function modifyStylesheet() {
 
 website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
+// TODO: Add a thing to reset the annotationCount item in localStorage
 reannotate()
 modifyStylesheet()

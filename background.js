@@ -17,7 +17,7 @@ function handleMessage(command) {
 
   // Sends a message to the tab containing the name of the command
   function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, command)
+    browser.tabs.sendMessage(tabs[0].id, {type: command})
   } 
 }
 
