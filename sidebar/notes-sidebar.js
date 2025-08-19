@@ -1,118 +1,131 @@
+const editFilepath = "../icons/edit.jpeg"
+const deleteFilepath = "../icons/delete.jpeg"
+const linkFilepath = "../icons/hyperlink.jpeg"
+const highlightFilepath = "/icons/highlighter.jpeg"
+const annotateFilepath = "/icons/notepad.jpeg"
+
 let myWindowId
 let notes = document.querySelector(".notes-window")
 
+function createLinkButton(id) {
+  let linkButton = document.createElement('img')
+  linkButton.src = linkFilepath
+  linkButton.className = "button"
+  linkButton.addEventListener("click", () => {
+    handleMessage(id, "scroll-to-note", "")
+  })
+  return linkButton
+}
+
+function createDeleteButton(id) {
+  let deleteButton = document.createElement('img')
+  deleteButton.src = deleteFilepath
+  deleteButton.className = "button"
+  deleteButton.addEventListener("click", () => {
+    handleMessage(id, "delete-note", "")
+  })
+  return deleteButton
+}
+
+function createEditButton(id) {
+  let editButton = document.createElement('img')
+  editButton.src = editFilepath
+  editButton.className = "button"
+  editButton.addEventListener("click", () => {
+    handleMessage(id, "edit-note", "")
+  })
+  return editButton
+}
+
 function displayHighlight(message) {
-  var newNote = document.createElement('div')
+  let newNote = document.createElement('div')
   newNote.className = "note" 
   newNote.setAttribute("id", message.id)
-  newNote.innerHTML = `<div class="note-header highlight" id="${message.id}">
-                          <img class="note-icon" src="/icons/highlighter.jpeg" alt="highlighted text">
-                          <div style="margin-left: auto;">
-                            <button class="button" type="image"><img class="note-icon" src="/icons/delete.jpeg"></button> 
-                            <button class="button" type="image"><img class="note-icon" src="/icons/hyperlink.jpeg"></a></button>
+  newNote.innerHTML = `<div class="note-header highlight">
+                          <img class="note-icon" src="${highlightFilepath}" alt="highlighted text">
+                          <div class="buttons" style="margin-left: auto;">
                           </div>
                         </div>
                         <p class="note-text">${message.content}</p>`
   notes.appendChild(newNote)
-  // TODO: Add onclick call to button for scrollToNote
+  let buttonsArray = document.getElementsByClassName("buttons")
+  let buttons = buttonsArray[buttonsArray.length - 1]
+  buttons.appendChild(linkButton)
+  buttons.appendChild(deleteButton)
 }
 
 function displayAnnotation(message) {
-  var newNote = document.createElement('div')
-  var linkButton = document.createElement('button')
-  linkButton.textContent = "scroll"
-  linkButton.addEventListener("click", () => {
-    scrollToNote(message.id)
-  })
-  deleteButton = document.createElement('button')
-  deleteButton.textContent = "delete"
-  deleteButton.addEventListener("click", () => {
-    deleteNote(message.id)
-  })
-  editButton = document.createElement('button')
-  editButton.textContent = "edit"
-  editButton.addEventListener("click", () => {
-    var newNote = prompt("Enter Note.")
-    var annotations = document.getElementsByClassName("annotation-text")
-    console.log("annotations:", annotations, message.id)
-    for (i = 0; i < annotations.length; i++) {
-      console.log(annotations[i].parentElement.id)
-      if (annotations[i].parentElement.id === message.id) {
-        console.log("matching")
-        annotations[i].textContent = newNote
-        break;
-      }
-    }
-    // TODO: write this function
-  })
+  let newNote = document.createElement('div')
+  let linkButton = createLinkButton(message.id)
+  let deleteButton = createDeleteButton(message.id)
+  let editButton = createEditButton(message.id)
   newNote.className = "note" 
   newNote.setAttribute("id", message.id)
   newNote.innerHTML = `<div class="note-header annotation">
-                          <img class="note-icon" src="/icons/notepad.jpeg" alt="annotated text">
+                          <img class="note-icon" src="${annotateFilepath}" alt="annotated text">
                           <div class="buttons" style="margin-left: auto;">
                           </div>
                         </div>
                         <p class="note-text annotation-text">${message.annotation}</p>
+                        <hr />
                         <p class="note-text">${message.content}</p>`
   notes.appendChild(newNote)
-  var buttonsArray = document.getElementsByClassName("buttons") // TODO: This is null in some cases
-  console.log(buttonsArray)
-  var buttons = buttonsArray[buttonsArray.length - 1]
+  let buttonsArray = document.getElementsByClassName("buttons")
+  let buttons = buttonsArray[buttonsArray.length - 1]
   buttons.appendChild(linkButton)
   buttons.appendChild(deleteButton)
   buttons.appendChild(editButton)
 }
 
-function  refreshNotes(windowInfo) {
+function  refreshNotes() {
   while (notes.firstChild) {
     notes.removeChild(notes.firstChild);
   }
 
-  let querying = browser.tabs.query({
-    active: true,
-    currentWindow: true,
-    });
-  querying.then(messageTab)
-
-  // Sends a message to the tab containing the name of the command
-  function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, {type: "refresh-sidebar"})
-  } 
+  handleMessage(null, "refresh-notes", "")
 }
 
-// TODO: Modify this to be in a listener. Buttons could have their id and their command as attributes and give them to the listener to reduce repeating.
-function scrollToNote(id) {
-  console.log("scrolling to", id)
+function handleMessage(id, command, text) {
+  switch (command) {
+    case "delete-note":
+      deleteNote(id)
+      break;
+    case "edit-note":
+      text = editNote(id)
+      break;
+  }
+
   let querying = browser.tabs.query({
-    active: true,
-    currentWindow: true,
-    });
+  active: true,
+  currentWindow: true,
+  });
   querying.then(messageTab)
 
   // Sends a message to the tab containing the name of the note and command
   function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, {type: "scroll-to-note", id: id})
+    browser.tabs.sendMessage(tabs[0].id, {type: command, id: id, note: text})
   } 
 }
 
 function deleteNote(id) {
-  console.log("deleting", id)
-  let querying = browser.tabs.query({
-    active: true,
-    currentWindow: true,
-    });
-  querying.then(messageTab)
   let notes = document.getElementsByClassName("note")
   for (i = 0; i < notes.length; i++) {
     if (notes[i].id == id) {
       notes[i].parentElement.removeChild(notes[i])
     }
   }
+}
 
-  // Sends a message to the tab containing the name of the note and command
-  function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, {type: "delete-note", id: id})
-  } 
+function editNote(id) {
+  let newNote = prompt("Enter Note.")
+  let annotations = document.getElementsByClassName("annotation-text")
+  for (i = 0; i < annotations.length; i++) {
+    if (annotations[i].parentElement.id === id) {
+      annotations[i].textContent = newNote
+      break;
+    }
+  }
+  return newNote
 }
 
 /*
@@ -121,7 +134,7 @@ and update its content.
 */
 browser.windows.getCurrent({populate: true}).then((windowInfo) => {
   myWindowId = windowInfo.id;
-  refreshNotes(windowInfo);
+  refreshNotes();
 });
 
 function addListeners() {

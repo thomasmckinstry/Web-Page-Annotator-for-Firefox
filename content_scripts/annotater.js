@@ -59,7 +59,7 @@ function highlightTextReceived(request, sender, sendResponse) {
     }
     try {
         // TODO: range.toString() can return gibberish in certain cases (See phonetics)
-        browser.runtime.sendMessage({type: "highlight-text", id: `${id}`, content: storedNote.content})
+        browser.runtime.sendMessage({type: "highlight-text", id: `annotater${id}${url}`, content: storedNote.content})
     } catch (err) {
         console.log("Sidebar is closed. Note saved successfully.")
     }
@@ -287,7 +287,6 @@ function scrollToNote(id) {
 }
 
 function deleteNote(id) {
-    console.log("deleting", id)
     for (i = 0; i < localStorage.length; i++) {
         console.log(localStorage.key(i))
         if (id == localStorage.key(i)) {
@@ -295,6 +294,12 @@ function deleteNote(id) {
             break;
         }
     }
+}
+
+function editNote(id, note) {
+    var storedNote = JSON.parse(localStorage.getItem(id))
+    storedNote.annotation = note
+    localStorage.setItem(id, JSON.stringify(storedNote))
 }
 
 browser.runtime.onMessage.addListener((command, tab) => {
@@ -313,6 +318,9 @@ browser.runtime.onMessage.addListener((command, tab) => {
             break;
         case "delete-note":
             deleteNote(command.id)
+            break;
+        case "edit-note":
+            editNote(command.id, command.note)
             break;
     }
 })
@@ -350,6 +358,5 @@ function modifyStylesheet() {
 
 website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
-// TODO: Add a thing to reset the annotationCount item in localStorage
 reannotate()
 modifyStylesheet()

@@ -4,6 +4,7 @@
   height: auto;
   background-color: whitesmoke;
 }
+
 .note {
   background-color: white;
   width: auto;
@@ -17,11 +18,26 @@
 }
 
 .button {
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  border: solid;
+  border-color: black;
+  border-width: 1px;
+  padding: 5px;
+  margin: 2px;
+  box-sizing: border-box;
+}
 
+hr {
+  width: 90%;
 }
 
 .note-text {
-  margin: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-sizing: border-box;
 }
 
 .note-header {
@@ -32,8 +48,15 @@
 }
 
 .note-icon {
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  border: solid;
+  border-color: black;
+  border-width: 1px;
+  padding: 5px;
+  margin: 2px;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
 }
