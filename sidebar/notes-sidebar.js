@@ -39,6 +39,8 @@ function createEditButton(id) {
 
 function displayHighlight(message) {
   let newNote = document.createElement('div')
+  let linkButton = createLinkButton(message.id)
+  let deleteButton = createDeleteButton(message.id)
   newNote.className = "note" 
   newNote.setAttribute("id", message.id)
   newNote.innerHTML = `<div class="note-header highlight">
@@ -82,7 +84,7 @@ function  refreshNotes() {
     notes.removeChild(notes.firstChild);
   }
 
-  handleMessage(null, "refresh-notes", "")
+  handleMessage(null, "refresh-sidebar", "")
 }
 
 function handleMessage(id, command, text) {
