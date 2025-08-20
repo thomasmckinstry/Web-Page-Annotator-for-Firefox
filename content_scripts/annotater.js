@@ -35,11 +35,11 @@ function highlightTextReceived() {
         window.alert("Can only highlight one range at a time.")
         return
     }
-    let selectedRange = selection.getRangeAt(0)
-    let start = selectedRange.startContainer
-    let startOffset = selectedRange.startOffset
-    let end = selectedRange.endContainer
-    let endOffset = selectedRange.endOffset
+    let range = selection.getRangeAt(0)
+    let start = range.startContainer
+    let startOffset = range.startOffset
+    let end = range.endContainer
+    let endOffset = range.endOffset
     let storedNote = {
         type: "highlight",
         id: id,
@@ -47,7 +47,7 @@ function highlightTextReceived() {
         endData: end.textContent,
         startOffset: startOffset,
         endOffset: endOffset,
-        content: selectedRange.toString()
+        content: range.toString(),
     }
     highlightText(`annotater${id}${url}`, start, end, startOffset, endOffset)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
@@ -125,7 +125,7 @@ function annotateTextReceived() {
         startOffset: startOffset,
         endOffset: endOffset,
         annotation: note,
-        content: range.toString() // TODO:
+        content: range.toString(),
     }
     annotateText(`annotater${id}${url}`, start, end, startOffset, endOffset, note)
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
@@ -150,6 +150,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     let popup = document.createElement("span")
     popup.className = "popup"
     popup.textContent = note
+    popup.style.display = "none"
     popup.class = `annotater-popup${id}`
     span.setAttribute("id", id)
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
@@ -237,16 +238,22 @@ function checkAnnotatedNode(node, notes) {
     return null
 }
 
-function findEnd(start, endData) {
-    let node;
-    for (node = start; node != null; node = getNextNode(node))
-    {
-        if (node.data === endData)
+function findEnd(start, endData, content) {
+    let node = start;
+    while (node != null) {
+        if (node.data === endData) {
+            return node
+        } else if (!content.includes(node.textContent)) {
             break;
+        }
+        content = content.substring(content.search(node.textContent))
+        node = getNextNode(node)
     }
-    return node;
+    return null;
 }
 
+// TODO: textContent is not sufficient to ensure that a node is the same one that was originally annotated.
+// Could try making a hash function that uses multiple properties of a node.
 function reannotate() {
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
@@ -257,16 +264,21 @@ function reannotate() {
     }
     let body = document.body;
     let node = body.firstChild
-    while (node != null) {
+    while (node != null && notes.size > 0) {
         let key = checkAnnotatedNode(node, notes)
         if (key) {
             let note = JSON.parse(localStorage.getItem(key))
-            let end = findEnd(node, note.endData)
-            if (note.type == "highlight") {
+            let end = findEnd(node, note.endData, note.content)
+            if (end == null) {
+                node = getNextNode(node)
+                continue
+            }
+            else if (note.type == "highlight") {
                 node = highlightText(key, node, end, note.startOffset, note.endOffset)
             } else {
                 node = annotateText(key, node, end, note.startOffset, note.endOffset, note.annotation)
             }
+            notes.delete(key)
         }
         node = getNextNode(node)
     }
@@ -332,10 +344,14 @@ function modifyStylesheet() {
             background-color: white;
             border: solid;
             border-color: black;
-            border-width: 2px;
+            border-width: 1px;
             border-radius: 5px;
-            padding: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
             position: absolute;
+            font-family: Arial, Helvetica, sans-serif;
+            box-sizing: border-box;
+            box-shadow: 0px 5px 5px -2px dimgrey;
         }   
     `
     if (style.styleSheet) {
@@ -349,5 +365,5 @@ function modifyStylesheet() {
 
 website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
-reannotate()
 modifyStylesheet()
+reannotate()
