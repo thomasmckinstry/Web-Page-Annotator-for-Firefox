@@ -1,8 +1,8 @@
-const editFilepath = "../icons/edit.jpeg"
-const deleteFilepath = "../icons/delete.jpeg"
-const linkFilepath = "../icons/hyperlink.jpeg"
-const highlightFilepath = "/icons/highlighter.jpeg"
-const annotateFilepath = "/icons/notepad.jpeg"
+const editFilepath = "../icons/pencil.svg"
+const deleteFilepath = "../icons/trash.svg"
+const linkFilepath = "../icons/link-45deg.svg"
+const highlightFilepath = "/icons/highlighter.svg"
+const annotateFilepath = "/icons/journal-text.svg"
 
 let myWindowId
 let notes = document.querySelector(".notes-window")
@@ -68,9 +68,9 @@ function displayAnnotation(message) {
                           <div class="buttons" style="margin-left: auto;">
                           </div>
                         </div>
-                        <p class="note-text annotation-text">${message.annotation}</p>
+                        <p class="note-text">${message.content}</p>
                         <hr />
-                        <p class="note-text">${message.content}</p>`
+                        <p class="note-text annotation-text">${message.annotation}</p>`
   notes.appendChild(newNote)
   let buttonsArray = document.getElementsByClassName("buttons")
   let buttons = buttonsArray[buttonsArray.length - 1]
@@ -120,6 +120,9 @@ function deleteNote(id) {
 
 function editNote(id) {
   let newNote = prompt("Enter Note.")
+  if (newNote == null || newNote == "") {
+    return
+  }
   let annotations = document.getElementsByClassName("annotation-text")
   for (i = 0; i < annotations.length; i++) {
     if (annotations[i].parentElement.id === id) {
