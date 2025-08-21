@@ -4,6 +4,9 @@ const linkFilepath = "../icons/link-45deg.svg"
 const highlightFilepath = "/icons/highlighter.svg"
 const annotateFilepath = "/icons/journal-text.svg"
 
+let highlightColor = "yellow";
+let annotationColor = "#ff4500";
+
 let myWindowId
 let notes = document.querySelector(".notes-window")
 
@@ -144,6 +147,7 @@ function addListeners() {
   for (i = 0; i < colorPickers.length; i++) {
     colorPickers[i].addEventListener("change", (event) => {
       handleMessage(null, event.target.id, event.target.value)
+      saveColor(event.target.id, event.target.value)
     })
   }
 
@@ -160,7 +164,41 @@ function addListeners() {
   })
 }
 
+function saveColor(type, value) {
+  switch (type) {
+    case "highlight-color-change":
+      localStorage.setItem("highlightColor", value)
+      break;
+    case "annotate-color-change":
+      localStorage.setItem("annotationColor", value)
+      break;
+  }
+}
+
+function loadColors() {
+  highlightColor = localStorage.getItem("highlightColor")
+  annotationColor = localStorage.getItem("annotationColor")
+
+  if (highlightColor == null) {
+    highlightColor = "yellow";
+    localStorage.setItem("highlightColor", "yellow")
+  }
+  if (annotationColor == null) {
+    annotationColor = "#ff4500";
+    localStorage.setItem("annotationColor", "#ff4500")
+  }
+
+  let highlightPicker = document.getElementById("highlight-color-change")
+  let annotatePicker = document.getElementById("annotate-color-change")
+
+  handleMessage(null, "highlight-color-change", highlightColor)
+  handleMessage(null, "annotate-color-change", annotationColor)
+  highlightPicker.value = highlightColor
+  annotatePicker.value = annotationColor
+}
+
 addListeners()
+loadColors()
 /*
 When the sidebar loads, get the ID of its window,
 and update its content.
