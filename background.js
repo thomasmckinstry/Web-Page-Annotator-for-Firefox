@@ -1,4 +1,6 @@
-// Confirms that buttons were added correctly
+/**
+ * Logs to console to indicate if buttons were created and added correctly to the context menu.
+ */
 function onCreated() {
     if (browser.runtime.lastError) {
       console.log(`Error: ${browser.runtime.lastError}`);
@@ -7,7 +9,10 @@ function onCreated() {
     }
 }
 
-// Is called when a background listener hears something. Is passed the command (either info.menuItemId or command depending on input source.)
+/**
+ * Sends the command to the content_scripts for execution.
+ * @param command The command inputted by the user.
+ */
 function handleMessage(command) {
   let querying = browser.tabs.query({
     active: true,
@@ -21,7 +26,9 @@ function handleMessage(command) {
   } 
 }
 
-// Creates the context menu buttons for interaction
+/**
+ * Creates the context menu buttons.
+ */
 function createButtons() {
   browser.menus.create({
       id: "highlight-selection",
@@ -36,6 +43,9 @@ function createButtons() {
   }, onCreated);
 }
 
+/**
+ * Adds in listeners for commands.
+ */
 function addListeners() {
   browser.menus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "highlight-selection" || info.menuItemId === "annotate-selection") {

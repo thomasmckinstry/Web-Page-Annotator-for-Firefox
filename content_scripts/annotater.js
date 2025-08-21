@@ -1,37 +1,47 @@
 let domain;
 let url;
 
-function getNextNode(node) // Taken from https://stackoverflow.com/a/7931003
-{
-    if (node.firstChild)
+/**
+ * Finds the node following a given node, for the purpose of iterating through the DOM.
+ * @param node any node in the DOM
+ * @returns The node in the DOM following the provided node
+ */
+function getNextNode(node) { // Taken from https://stackoverflow.com/a/7931003
+    if (node.firstChild) {
         return node.firstChild;
-    while (node)
-    {
+    }
+    while (node) {
         if (node.nextSibling)
             return node.nextSibling;
         node = node.parentNode;
     }
 }
 
-function getNodesInRange(start, end) // Partially taken from https://stackoverflow.com/a/7931003
-{
+/**
+ * Gives a list of nodes in a provided range.
+ * @param start the first node of the range being found (usually range.startContainer)
+ * @param end the last node of the range being found (usually range.endContainer)
+ * @returns a list of all nodes in the range.
+ */
+function getNodesInRange(start, end) { // Partially taken from https://stackoverflow.com/a/7931003
     let nodes = [];
     let node;
-    for (node = start; node; node = getNextNode(node))
-    {
+    for (node = start; node; node = getNextNode(node)) {
         nodes.push(node);
         if (node == end)
             break;
     }
-
     return nodes;
 }
 
+/** // TODO: Combine this with annotateTextReceived to minimize repetition. Should only need to add an argument and an attribute to storedNode.
+ * Handles overhead for highlighting text. Such as notifying sidebar and saving information to localStorage.
+ * @returns null - ALlows the function to bail out when multiple ranges are selected. Could be modified later to handle multiple ranges.
+ */
 function highlightTextReceived() {
     let selection = document.getSelection()
     let id = getId() // Will be used to identify the new <mark> and note in local storage
-    // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension.
-    if (selection.rangeCount > 1) {
+    if (selection.rangeCount > 1) { // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension. 
         window.alert("Can only highlight one range at a time.")
         return
     }
@@ -49,7 +59,7 @@ function highlightTextReceived() {
         endOffset: endOffset,
         content: range.toString(),
     }
-    highlightText(`annotater${id}${url}`, start, end, startOffset, endOffset)
+    highlightText(`annotater${id}${url}`, start, end, startOffset, endOffset) // Handles the actual DOM manipulation.
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -63,10 +73,21 @@ function highlightTextReceived() {
     }
 }
 
+/**
+ * Manipulates the DOM to put nodes contained in the selection into <mark> elements.
+ * @param id the id of a note, in the format "annotater${id}/${url}" 
+ * @param start The start node of the range being highlighted
+ * @param end the end node of the range being highlighted
+ * @param startOffset the amount of offset into text Node where the range begins
+ * @param endOffset the amount of offset into a text Node where the range ends
+ * @returns the last node inserted, to continue iteration from in reannotate()
+ */
 function highlightText(id, start, end, startOffset, endOffset) {
+    // Nodes should be cloned to avoid potentially losing references as the DOM is modified.
     let startClone = start.cloneNode()
     let endClone = end.cloneNode()
     let mark = document.createElement("mark")
+    // This block handles the case where the range is entirely within a single node. It is separated out as to avoid unnecesary function calls.
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
         mark.setAttribute("id", id)
         mark.className = "highlight"
@@ -81,37 +102,42 @@ function highlightText(id, start, end, startOffset, endOffset) {
     }
     let nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
-        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) {
+        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) { // TODO: Figure out if the second half of this conditional is needed.
             mark = document.createElement("mark")
             mark.className = "highlight"
             mark.setAttribute("id", id)
             node.parentNode.replaceChild(mark, node)
         }
         mark.appendChild(node)
+        // Splits off the unhighlighted portion of the starting text node if necessary.
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(0, startOffset))
-            node.textContent = node.textContent.substring(startOffset)
+            node.textContent = node.textContent.substring(startOffset) // TODO: Could split this into a separate function
             mark.parentNode.insertBefore(newText, mark)
-        } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
+        }  // Splits off the unhighlighted portion of the ending text node if necessary.
+        else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
-            mark.parentNode.replaceChild(newText, mark)
+            mark.parentNode.replaceChild(newText, mark) // TODO: Could split this into a separate function
             newText.parentElement.insertBefore(mark, newText)
         }
     })
     return mark
 }
 
+/** // TODO: Combine this with highlightTextReceived to minimize repetition. Should only need to add an argument.
+ * Handles overhead for annotating text. Such as notifying sidebar and saving information to localStorage.
+ * @returns null - ALlows the function to bail out when multiple ranges are selected. Could be modified later to handle multiple ranges.
+ */
 function annotateTextReceived() {
     let selection = document.getSelection()
-    let note = prompt("Enter Note.")
+    let note = prompt("Enter Note.") // TODO: Replace this with a custom element to match sidebar visuals.
     let id = getId()
-    
-    if (selection.rangeCount > 1)  {
+    // Will be used to identify the new <mark> and note in local storage
+    if (selection.rangeCount > 1) { // Highlighting multiple ranges would be complicated, and not really align with how I would expect people to use the extension. 
         window.alert("Can only annotate one range at a time.")
         return
     }
-
     let range = selection.getRangeAt(0)
     let start = range.startContainer
     let startOffset = range.startOffset
@@ -127,7 +153,7 @@ function annotateTextReceived() {
         annotation: note,
         content: range.toString(),
     }
-    annotateText(`annotater${id}${url}`, start, end, startOffset, endOffset, note)
+    annotateText(`annotater${id}${url}`, start, end, startOffset, endOffset, note) // Actual DOM manipulation is handled in here.
     localStorage.setItem(`annotater${id}${url}`, JSON.stringify(storedNote))
     if (localStorage.getItem("annotationCount") == null) {
         localStorage.setItem("annotationCount", 1)
@@ -141,17 +167,30 @@ function annotateTextReceived() {
     }
 }
 
+/**
+ * Manipulates the DOM to put nodes contained in the selection into <mark> elements.
+ * This is separate from highlightText as dealing with the popup and span elements would add bloat and make both functionalities less readable.
+ * @param id the id of a note, in the format "annotater${id}/${url}" 
+ * @param start The start node of the range being highlighted
+ * @param end the end node of the range being highlighted
+ * @param startOffset the amount of offset into text Node where the range begins
+ * @param endOffset the amount of offset into a text Node where the range ends
+ * @returns the last node inserted, to continue iteration from in reannotate()
+ */
 function annotateText(id, start, end, startOffset, endOffset, note) {
+    // Nodes are cloned to avoid losing references as the DOM is modified
     let startClone = start.cloneNode()
     let endClone = end.cloneNode()
     let span = document.createElement("span")
-    span.className = "annotation"
     let popup = document.createElement("span")
+    span.className = "annotation"
     popup.className = "popup"
     popup.textContent = note
     popup.style.display = "none"
-    popup.class = `annotater-popup${id}`
+    popup.id = `annotater-popup/${id}`
+    console.log(popup.id)
     span.setAttribute("id", id)
+    // This block handles the case where the range is entirely within a single node. It is separated out as to avoid unnecesary function calls.
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
         let startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
         let endText = document.createTextNode(endClone.textContent.substring(endOffset))
@@ -184,14 +223,16 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
             })
         }
         span.appendChild(node)
+        // Handles splitting off unhighlighted portion of the start node.
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(0, startOffset))
-            node.textContent = node.textContent.substring(startOffset)
+            node.textContent = node.textContent.substring(startOffset) // TODO: Could split this into a separate function
             span.parentNode.insertBefore(newText, span)
-        } else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
+        } // Handles splitting off unhighlighted portion of the end node. 
+        else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
-            span.parentNode.replaceChild(newText, span)
+            span.parentNode.replaceChild(newText, span) // TODO: Could split this into a separate function
             newText.parentElement.insertBefore(span, newText)
         }
     })
@@ -199,6 +240,10 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     return span
 }
 
+/**
+ * Finds the first valid unused id number
+ * @returns the id to be used for a new note.
+ */
 function getId() {
     let note = localStorage.getItem(`annotater0${url}`)
     let id = 0;
@@ -211,6 +256,9 @@ function getId() {
     return id
 }
 
+/**
+ * Sends messages to the sidebar containing information on existing notes.
+ */
 function refreshSidebar() {
     for (i = 0; i < localStorage.length; i++) {
         let key = localStorage.key(i)
@@ -225,6 +273,12 @@ function refreshSidebar() {
     }
 }
 
+/**
+ * Verifies if a given node was previously annotated.
+ * @param node The node to check
+ * @param notes All notes that were saved in localStorage
+ * @returns The key matching the note that corresponds to the given node if it exists. Otherwise null
+ */
 function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
@@ -237,12 +291,20 @@ function checkAnnotatedNode(node, notes) {
     return null
 }
 
+/**
+ * Finds the last node object corresponding to an existing node.
+ * @param start The node that the note began at, used to start iteration.
+ * @param endData The data contained in the ending node.
+ * @param content All content that was in the range.
+ * @returns the end node if found, null if not found (usually occurs when the text from start exists in multiple places)
+ */
 function findEnd(start, endData, content) {
     let node = start;
     while (node != null) {
         if (node.data === endData) {
             return node
-        } else if (!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) {
+        } // Just checking the textContent of the start on it's own is not sufficient to know if the start was correct. Every node should be checked to make sure it all matches.
+        else if (!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) {
             break;
         }
         node = getNextNode(node)
@@ -252,6 +314,9 @@ function findEnd(start, endData, content) {
 
 // TODO: This is working inconsistently. Need to test it more thoroughly
 // TODO: Add something to notify the user if a note fails to be displayed. (This can probably happen in the sidebar)
+/**
+ * Looks through localStorage to find and highlight notes from previous sessions.
+ */
 function reannotate() {
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
@@ -282,31 +347,38 @@ function reannotate() {
     }
 }
 
+/**
+ * Scrolls to the identified note
+ * @param id the id of a note, in the format "annotater${id}/${url}" 
+ */
 function scrollToNote(id) {
     let element = document.getElementById(id)
     try {
          element.scrollIntoView()
     } catch (err) {
+        // TODO: Replace this popup with a custom popup so it looks nicer.
         window.alert("Note not found in page. The page may have been updated and the note was removed. If the note content is still there, please submit an issue here (https://github.com/thomasmckinstry/Annotater/issues).")
     }
 }
 
-function deleteNote(id) {
-    for (i = 0; i < localStorage.length; i++) {
-        console.log(localStorage.key(i))
-        if (id == localStorage.key(i)) {
-            localStorage.removeItem(localStorage.key(i))
-            break;
-        }
-    }
-}
-
+/**
+ * Modifies localStorage to be consistent with change to annotation made in sidebar, and modifies corresponding popup.
+ * @param id the id of a note, in the format "annotater${id}/${url}" 
+ * @param note the new annotation as enterered in sidebar. 
+ */
 function editNote(id, note) {
     let storedNote = JSON.parse(localStorage.getItem(id))
     storedNote.annotation = note
     localStorage.setItem(id, JSON.stringify(storedNote))
+    let popup = document.getElementById(`annotater-popup/${id}`)
+    popup.textContent = note
 }
 
+/**
+ * Modifies stylesheet to correspond to new colors, and saves new colors to localStorage to be used on refresh.
+ * @param type Indicates if the color change is to highlight color or annotate color.
+ * @param value The hex code for the new color
+ */
 function changeColor(type, value) {
     // This block taken from https://developer.mozilla.org/en-US/docs/Web/API/Document/styleSheets
     let sheet
@@ -316,7 +388,6 @@ function changeColor(type, value) {
             break;
         }
     }
-    
     switch(type) {
         case "highlight":
             sheet.deleteRule(0)
@@ -331,6 +402,9 @@ function changeColor(type, value) {
     }
 }
 
+/**
+ * Adds in listeners for communication with backgroundScript and sidebar 
+ */
 browser.runtime.onMessage.addListener((command, tab) => {
     switch (command.type) {
         case "highlight-selection":
@@ -346,7 +420,7 @@ browser.runtime.onMessage.addListener((command, tab) => {
             scrollToNote(command.id)
             break;
         case "delete-note":
-            deleteNote(command.id)
+            localStorage.removeItem(id)
             break;
         case "edit-note":
             editNote(command.id, command.note)
@@ -360,6 +434,9 @@ browser.runtime.onMessage.addListener((command, tab) => {
     }
 })
 
+/**
+ * Adds in a stylesheet to the <head> to style elements that will be added in.
+ */
 function modifyStylesheet() {
     let head = document.getElementsByTagName("head")[0]
     let style = document.createElement("style")
