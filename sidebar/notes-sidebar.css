@@ -96,6 +96,10 @@ hr {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+input:active {
+  background-color: grey;
+}
+
 .color-pickers {
   display: flex;
 }
