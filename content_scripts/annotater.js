@@ -251,8 +251,7 @@ function findEnd(start, endData, content) {
     return null;
 }
 
-// TODO: This is broken. Not sure what causes it to not work. Need to diagnose.
-// Seems like some non-text elements cause problems.
+// TODO: This is working inconsistently. Need to test it more thoroughly
 function reannotate() {
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
@@ -396,3 +395,4 @@ website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
 modifyStylesheet()
 reannotate()
+browser.runtime.sendMessage({type: "get-colors"})
