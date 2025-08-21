@@ -87,13 +87,13 @@ function  refreshNotes() {
   handleMessage(null, "refresh-sidebar", "")
 }
 
-function handleMessage(id, command, text) {
+function handleMessage(id, command, value) {
   switch (command) {
     case "delete-note":
       deleteNote(id)
       break;
     case "edit-note":
-      text = editNote(id)
+      value = editNote(id)
       break;
   }
 
@@ -105,7 +105,7 @@ function handleMessage(id, command, text) {
 
   // Sends a message to the tab containing the name of the note and command
   function messageTab(tabs) {
-    browser.tabs.sendMessage(tabs[0].id, {type: command, id: id, note: text})
+    browser.tabs.sendMessage(tabs[0].id, {type: command, id: id, note: value})
   } 
 }
 
@@ -133,21 +133,19 @@ function editNote(id) {
   return newNote
 }
 
-/*
-When the sidebar loads, get the ID of its window,
-and update its content.
-*/
-browser.windows.getCurrent({populate: true}).then((windowInfo) => {
-  myWindowId = windowInfo.id;
-  refreshNotes();
-});
-
 function addListeners() {
   // Update content when a new tab becomes active.
   browser.tabs.onActivated.addListener(refreshNotes);
 
   // Update content when a new page is loaded into a tab.
   browser.tabs.onUpdated.addListener(refreshNotes);
+
+  let colorPickers = document.getElementsByClassName("color-picker")
+  for (i = 0; i < colorPickers.length; i++) {
+    colorPickers[i].addEventListener("change", (event) => {
+      handleMessage(null, event.target.id, event.target.value)
+    })
+  }
 
   // Add listeners for events from content_scripts
   browser.runtime.onMessage.addListener((message) => {
@@ -163,3 +161,11 @@ function addListeners() {
 }
 
 addListeners()
+/*
+When the sidebar loads, get the ID of its window,
+and update its content.
+*/
+browser.windows.getCurrent({populate: true}).then((windowInfo) => {
+  myWindowId = windowInfo.id;
+  refreshNotes();
+});

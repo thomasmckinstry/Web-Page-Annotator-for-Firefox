@@ -243,17 +243,16 @@ function findEnd(start, endData, content) {
     while (node != null) {
         if (node.data === endData) {
             return node
-        } else if (!content.includes(node.textContent)) {
+        } else if (!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) {
             break;
         }
-        content = content.substring(content.search(node.textContent))
         node = getNextNode(node)
     }
     return null;
 }
 
-// TODO: textContent is not sufficient to ensure that a node is the same one that was originally annotated.
-// Could try making a hash function that uses multiple properties of a node.
+// TODO: This is broken. Not sure what causes it to not work. Need to diagnose.
+// Seems like some non-text elements cause problems.
 function reannotate() {
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
@@ -305,6 +304,28 @@ function editNote(id, note) {
     localStorage.setItem(id, JSON.stringify(storedNote))
 }
 
+function changeColor(type, value) {
+    // This block taken from https://developer.mozilla.org/en-US/docs/Web/API/Document/styleSheets
+    let sheet
+    for (i = 0; i < document.styleSheets.length; i++) {
+        if (document.styleSheets[i].title === "annotater") {
+            sheet = document.styleSheets[i]
+            break;
+        }
+    }
+    
+    switch(type) {
+        case "highlight":
+            sheet.deleteRule(0)
+            sheet.insertRule(`.highlight { background: ${value}; }`, 0)
+            break;
+        case "annotation":
+            sheet.deleteRule(1)
+            sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${value}; }`, 1)
+            break;
+    }
+}
+
 browser.runtime.onMessage.addListener((command, tab) => {
     switch (command.type) {
         case "highlight-selection":
@@ -325,19 +346,27 @@ browser.runtime.onMessage.addListener((command, tab) => {
         case "edit-note":
             editNote(command.id, command.note)
             break;
+        case "highlight-color-change":
+            changeColor("highlight", command.note)
+            break;
+        case "annotate-color-change":
+            changeColor("annotation", command.note)
+            break;
     }
 })
 
 function modifyStylesheet() {
     let head = document.getElementsByTagName("head")[0]
     let style = document.createElement("style")
+    style.id = "annotater-stylesheet"
+    style.title = "annotater"
     let css = `
         .highlight {
             background: yellow;
         }
 
         .annotation {
-            text-shadow: 0 0 0.2em orange;
+            text-shadow: 0 0 0.2em #ff4500;
         }
 
         .popup {
