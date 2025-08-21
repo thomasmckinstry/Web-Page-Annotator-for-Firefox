@@ -41,6 +41,9 @@ function createEditButton(id) {
 }
 
 function displayHighlight(message) {
+  if (document.getElementById(message.id) != null) {
+    return
+  }
   let newNote = document.createElement('div')
   let linkButton = createLinkButton(message.id)
   let deleteButton = createDeleteButton(message.id)
@@ -60,6 +63,9 @@ function displayHighlight(message) {
 }
 
 function displayAnnotation(message) {
+  if (document.getElementById(message.id) != null) {
+    return
+  }
   let newNote = document.createElement('div')
   let linkButton = createLinkButton(message.id)
   let deleteButton = createDeleteButton(message.id)
@@ -159,6 +165,10 @@ function addListeners() {
       break;
     case "annotate-text":
       displayAnnotation(message)
+      break;
+    case "get-colors":
+      handleMessage(null, "highlight-color-change", highlightColor)
+      handleMessage(null, "annotation-color-change", annotationColor)
       break;
   }  
   })
