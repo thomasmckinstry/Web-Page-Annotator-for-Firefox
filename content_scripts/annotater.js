@@ -135,7 +135,6 @@ function annotateTextReceived() {
         localStorage.setItem("annotationCount", parseInt(localStorage.getItem("annotationCount")) + 1)
     }
     try {
-        // TODO: range.toString() can return gibberish in certain cases (See phonetics) [Try changing the charset]
         browser.runtime.sendMessage({type: "annotate-text", id: `annotater${id}${url}`, content: storedNote.content, annotation: note})
     } catch (err) {
         console.log(err)
@@ -252,6 +251,7 @@ function findEnd(start, endData, content) {
 }
 
 // TODO: This is working inconsistently. Need to test it more thoroughly
+// TODO: Add something to notify the user if a note fails to be displayed. (This can probably happen in the sidebar)
 function reannotate() {
     let notes = new Map();
     for (i = 0; i < localStorage.length; i++) {
@@ -284,7 +284,11 @@ function reannotate() {
 
 function scrollToNote(id) {
     let element = document.getElementById(id)
-    element.scrollIntoView()
+    try {
+         element.scrollIntoView()
+    } catch (err) {
+        window.alert("Note not found in page. The page may have been updated and the note was removed. If the note content is still there, please submit an issue here (https://github.com/thomasmckinstry/Annotater/issues).")
+    }
 }
 
 function deleteNote(id) {
@@ -317,10 +321,12 @@ function changeColor(type, value) {
         case "highlight":
             sheet.deleteRule(0)
             sheet.insertRule(`.highlight { background: ${value}; }`, 0)
+            localStorage.setItem("highlightColor", value)
             break;
         case "annotation":
             sheet.deleteRule(1)
             sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${value}; }`, 1)
+            localStorage.setItem("annotationColor", value)
             break;
     }
 }
@@ -357,15 +363,25 @@ browser.runtime.onMessage.addListener((command, tab) => {
 function modifyStylesheet() {
     let head = document.getElementsByTagName("head")[0]
     let style = document.createElement("style")
+    let highlightColor = localStorage.getItem("highlightColor")
+    let annotationColor = localStorage.getItem("annotationColor")
+    if (highlightColor == null) {
+        highlightColor = "yellow";
+        localStorage.setItem("highlightColor", "yellow")
+    }
+    if (annotationColor == null) {
+        annotationColor = "#ff4500";
+        localStorage.setItem("annotationColor", "#ff4500")
+    }
     style.id = "annotater-stylesheet"
     style.title = "annotater"
     let css = `
         .highlight {
-            background: yellow;
+            background: ${highlightColor};
         }
 
         .annotation {
-            text-shadow: 0 0 0.2em #ff4500;
+            text-shadow: 0 0 0.2em ${annotationColor};
         }
 
         .popup {
