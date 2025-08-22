@@ -165,7 +165,7 @@ function deleteNote(id) {
  * @returns The new annotation, to be sent to the content_script and put in localStorage.
  */
 function editNote(id) {
-  let newNote = prompt("Enter Note.")
+  let newNote = prompt("Enter Note.") // TODO: Replace this with a custom element for better visuals and preload existing annotation for ease of use.
   if (newNote == null || newNote == "") {
     return
   }
@@ -185,7 +185,7 @@ function addListeners() {
   // Update content when a new page is loaded into a tab.
   browser.tabs.onUpdated.addListener(refreshNotes);
 
-  // Notifies content_script when color pickers change, and saves new colors to sidebar localStorage.
+  // Notifies content_script when color pickers change, and saves new colors to extension storage .
   let colorPickers = document.getElementsByClassName("color-picker")
   for (i = 0; i < colorPickers.length; i++) {
     colorPickers[i].addEventListener("change", (event) => {
@@ -203,50 +203,50 @@ function addListeners() {
     case "annotate-text":
       displayAnnotation(message)
       break;
-    case "get-colors":
-      handleMessage(null, "highlight-color-change", highlightColor)
-      handleMessage(null, "annotation-color-change", annotationColor)
-      break;
-  }  
   })
 }
 
 /**
- * Saves any changes to the color pickers to localStorage.
+ * Saves any changes to the color pickers to extension storage.
  * @param type indicates if a color corresponds to highlighted text or annotated text.
  * @param value the hex code for the new color
  */
 function saveColor(type, value) {
   switch (type) {
     case "highlight-color-change":
-      localStorage.setItem("highlightColor", value)
+      browser.storage.sync.set({annotaterHighlightColor: value})
       break;
     case "annotate-color-change":
-      localStorage.setItem("annotationColor", value)
+      browser.storage.sync.set({annotaterAnnotationColor: value})
       break;
   }
 }
 
 /**
- * Gets colors from localStorage, modifies the colorPickers as needed, and notifies the content_script.
+ * Gets colors from extension storage, modifies the colorPickers as needed, and notifies the content_script.
  */
 function loadColors() {
-  highlightColor = localStorage.getItem("highlightColor")
-  annotationColor = localStorage.getItem("annotationColor")
-  if (highlightColor == null) {
-    highlightColor = "#ffff00";
-    localStorage.setItem("highlightColor", "#ffff00")
+  let highlightColor = null
+  let annotationColor = null
+  highlightPromise = browser.storage.sync.get("annotaterHighlightColor")
+  annotationPromise = browser.storage.sync.get("annotaterAnnotationColor")
+  highlightPromise.then(setColor)
+  annotationPromise.then(setColor)
+
+  function setColor(object) {
+    switch (Object.keys(object)[0]) {
+      case "annotaterHighlightColor":
+        highlightColor = object.annotaterHighlightColor || "#ffff00"
+        break;
+      case "annotaterAnnotationColor":
+        annotationColor = object.annotaterAnnotationColor || "#ff4500"
+        break;
+    }
+    let highlightPicker = document.getElementById("highlight-color-change")
+    let annotatePicker = document.getElementById("annotate-color-change")
+    highlightPicker.value = highlightColor
+    annotatePicker.value = annotationColor
   }
-  if (annotationColor == null) {
-    annotationColor = "#ff4500";
-    localStorage.setItem("annotationColor", "#ff4500")
-  }
-  let highlightPicker = document.getElementById("highlight-color-change")
-  let annotatePicker = document.getElementById("annotate-color-change")
-  handleMessage(null, "highlight-color-change", highlightColor)
-  handleMessage(null, "annotate-color-change", annotationColor)
-  highlightPicker.value = highlightColor
-  annotatePicker.value = annotationColor
 }
 
 addListeners()

@@ -425,12 +425,25 @@ browser.runtime.onMessage.addListener((command, tab) => {
         case "edit-note":
             editNote(command.id, command.note)
             break;
-        case "highlight-color-change":
-            changeColor("highlight", command.note)
+    }
+})
+
+browser.storage.sync.onChanged.addListener((changes, area) => {
+    let sheet
+    for (i = 0; i < document.styleSheets.length; i++) {
+        if (document.styleSheets[i].title === "annotater") {
+            sheet = document.styleSheets[i]
             break;
-        case "annotate-color-change":
-            changeColor("annotation", command.note)
-            break;
+        }
+    }
+    const changedItems = Object.keys(changes)
+    if (changedItems.includes("annotaterHighlightColor")) {
+        sheet.deleteRule(1)
+        sheet.insertRule(`.highlight { background: ${changes.annotaterHighlightColor.newValue}; }`, 1)
+    }
+    if (changedItems.includes("annotaterAnnotationColor")) {
+        sheet.deleteRule(2)
+        sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${changes.annotaterAnnotationColor.newValue}; }`, 2)
     }
 })
 
@@ -440,27 +453,12 @@ browser.runtime.onMessage.addListener((command, tab) => {
 function modifyStylesheet() {
     let head = document.getElementsByTagName("head")[0]
     let style = document.createElement("style")
-    let highlightColor = localStorage.getItem("highlightColor")
-    let annotationColor = localStorage.getItem("annotationColor")
-    if (highlightColor == null) {
-        highlightColor = "yellow";
-        localStorage.setItem("highlightColor", "yellow")
-    }
-    if (annotationColor == null) {
-        annotationColor = "#ff4500";
-        localStorage.setItem("annotationColor", "#ff4500")
-    }
+    let highlightPromise = browser.storage.sync.get("annotaterHighlightColor")
+    let annotationPromise = browser.storage.sync.get("annotaterAnnotationColor")
+
     style.id = "annotater-stylesheet"
     style.title = "annotater"
     let css = `
-        .highlight {
-            background: ${highlightColor};
-        }
-
-        .annotation {
-            text-shadow: 0 0 0.2em ${annotationColor};
-        }
-
         .popup {
             background-color: white;
             border: solid;
@@ -482,10 +480,34 @@ function modifyStylesheet() {
         style.appendChild(document.createTextNode(css));
     }
     head.appendChild(style)
+
+    highlightPromise.then(setColor)
+    annotationPromise.then(setColor)
+
+    function setColor(object) {
+        let highlightColor
+        let annotationColor
+        let rule
+        switch (Object.keys(object)[0]) {
+        case "annotaterHighlightColor":
+            highlightColor = object.annotaterHighlightColor || "#ffff00"
+            rule = `.highlight { background: ${highlightColor}; }`
+            break;
+        case "annotaterAnnotationColor":
+            annotationColor = object.annotaterAnnotationColor || "#ff4500"
+            rule = `.annotation { text-shadow: 0 0 0.2em ${annotationColor}; }`
+            break;
+        }
+        if (style.styleSheet) {
+        // Required for IE8 and below
+            style.styleSheet.cssText + rule;
+        } else {
+            style.appendChild(document.createTextNode(rule));
+        }
+    }
 }
 
 website = window.location.href
 url = website.substring(website.lastIndexOf("/"))
 modifyStylesheet()
 reannotate()
-browser.runtime.sendMessage({type: "get-colors"})
