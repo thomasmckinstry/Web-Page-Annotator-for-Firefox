@@ -10,6 +10,13 @@
       "scripts": ["background.js"]
     },
 
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "@annotater",
+        "strict_min_version": "58.0"
+      }
+    },
+
     "sidebar_action": {
       "default_icon": "icons/journals.png",
       "default_title" : "Annotater",
