@@ -1,8 +1,8 @@
-const editFilepath = "../icons/pencil.svg"
-const deleteFilepath = "../icons/trash.svg"
-const linkFilepath = "../icons/link-45deg.svg"
-const highlightFilepath = "/icons/highlighter.svg"
-const annotateFilepath = "/icons/journal-text.svg"
+const editFilepath = "../components/icons/pencil.svg"
+const deleteFilepath = "../components/icons/trash.svg"
+const linkFilepath = "../components/icons/link-45deg.svg"
+const highlightFilepath = "../components/icons/highlighter.svg"
+const annotateFilepath = "../components/icons/journal-text.svg"
 
 let highlightColor = "#ffff00";
 let annotationColor = "#ff4500";

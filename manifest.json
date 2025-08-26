@@ -2,12 +2,11 @@
     "manifest_version": 2,
     "name": "Annotater",
     "version": "1.0",
-    "default_locale": "en",
   
     "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
 
     "background": {
-      "scripts": ["background.js"]
+      "scripts": ["src/app/background.js"]
     },
 
     "browser_specific_settings": {
@@ -18,9 +17,9 @@
     },
 
     "sidebar_action": {
-      "default_icon": "icons/sidebarIcon.svg",
+      "default_icon": "src/components/icons/sidebarIcon.svg",
       "default_title" : "Annotater",
-      "default_panel": "sidebar/notes-sidebar.html",
+      "default_panel": "src/components/notes-sidebar.html",
       "open_at_install": false
     },
 
@@ -48,14 +47,14 @@
     },
 
     "icons": {
-        "64": "icons/sidebarIcon.svg",
-        "32": "icons/sidebarIcon.svg"
+        "64": "src/components/icons/sidebarIcon.svg",
+        "32": "src/components/icons/sidebarIcon.svg"
       },
 
     "content_scripts": [
         {
           "matches": ["*://*/*"],
-          "js": ["content_scripts/annotater.js"]
+          "js": ["src/app/annotater.js"]
         }
     ]
 
