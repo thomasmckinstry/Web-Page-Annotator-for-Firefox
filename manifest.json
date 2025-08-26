@@ -1,6 +1,6 @@
 {
     "manifest_version": 2,
-    "name": "Annotater",
+    "name": "HTML Annotator",
     "version": "1.0",
   
     "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
@@ -11,13 +11,13 @@
 
     "browser_specific_settings": {
       "gecko": {
-        "id": "@annotater",
+        "id": "@html-annotator",
         "strict_min_version": "58.0"
       }
     },
 
     "sidebar_action": {
-      "default_icon": "src/components/icons/sidebarIcon.svg",
+      "default_icon": "src/components/icons/mainIcon.svg",
       "default_title" : "Annotater",
       "default_panel": "src/components/notes-sidebar.html",
       "open_at_install": false
@@ -47,8 +47,8 @@
     },
 
     "icons": {
-        "64": "src/components/icons/sidebarIcon.svg",
-        "32": "src/components/icons/sidebarIcon.svg"
+        "64": "src/components/icons/mainIcon.svg",
+        "32": "src/components/icons/mainIcon.svg"
       },
 
     "content_scripts": [
