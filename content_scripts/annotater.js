@@ -73,58 +73,6 @@ function highlightTextReceived() {
     }
 }
 
-/**
- * Manipulates the DOM to put nodes contained in the selection into <mark> elements.
- * @param id the id of a note, in the format "annotater${id}/${url}" 
- * @param start The start node of the range being highlighted
- * @param end the end node of the range being highlighted
- * @param startOffset the amount of offset into text Node where the range begins
- * @param endOffset the amount of offset into a text Node where the range ends
- * @returns the last node inserted, to continue iteration from in reannotate()
- */
-function highlightText(id, start, end, startOffset, endOffset) {
-    // Nodes should be cloned to avoid potentially losing references as the DOM is modified.
-    let startClone = start.cloneNode()
-    let endClone = end.cloneNode()
-    let mark = document.createElement("mark")
-    // This block handles the case where the range is entirely within a single node. It is separated out as to avoid unnecesary function calls.
-    if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
-        mark.setAttribute("id", id)
-        mark.className = "highlight"
-        let startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
-        let endText = document.createTextNode(endClone.textContent.substring(endOffset))
-        let markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
-        mark.appendChild(markText)
-        start.parentNode.replaceChild(endText, start)
-        endText.parentNode.insertBefore(mark, endText)
-        mark.parentNode.insertBefore(startText, mark)
-        return endText
-    }
-    let nodes = getNodesInRange(start, end)
-    nodes.forEach((node) => {
-        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) { // TODO: Figure out if the second half of this conditional is needed.
-            mark = document.createElement("mark")
-            mark.className = "highlight"
-            mark.setAttribute("id", id)
-            node.parentNode.replaceChild(mark, node)
-        }
-        mark.appendChild(node)
-        // Splits off the unhighlighted portion of the starting text node if necessary.
-        if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
-            let newText = document.createTextNode(node.textContent.substring(0, startOffset))
-            node.textContent = node.textContent.substring(startOffset) // TODO: Could split this into a separate function
-            mark.parentNode.insertBefore(newText, mark)
-        }  // Splits off the unhighlighted portion of the ending text node if necessary.
-        else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
-            let newText = document.createTextNode(node.textContent.substring(endOffset))
-            node.textContent = node.textContent.substring(0, endOffset)
-            mark.parentNode.replaceChild(newText, mark) // TODO: Could split this into a separate function
-            newText.parentElement.insertBefore(mark, newText)
-        }
-    })
-    return mark
-}
-
 /** // TODO: Combine this with highlightTextReceived to minimize repetition. Should only need to add an argument.
  * Handles overhead for annotating text. Such as notifying sidebar and saving information to localStorage.
  * @returns null - ALlows the function to bail out when multiple ranges are selected. Could be modified later to handle multiple ranges.
@@ -169,6 +117,58 @@ function annotateTextReceived() {
 
 /**
  * Manipulates the DOM to put nodes contained in the selection into <mark> elements.
+ * @param id the id of a note, in the format "annotater${id}/${url}" 
+ * @param start The start node of the range being highlighted
+ * @param end the end node of the range being highlighted
+ * @param startOffset the amount of offset into text Node where the range begins
+ * @param endOffset the amount of offset into a text Node where the range ends
+ * @returns the last node inserted, to continue iteration from in reannotate()
+ */
+function highlightText(id, start, end, startOffset, endOffset) {
+    // Nodes should be cloned to avoid potentially losing references as the DOM is modified.
+    let startClone = start.cloneNode()
+    let endClone = end.cloneNode()
+    let mark = document.createElement("mark")
+    // This block handles the case where the range is entirely within a single node. It is separated out as to avoid unnecesary function calls.
+    if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
+        mark.setAttribute("id", id)
+        mark.className = "highlight"
+        let startText = document.createTextNode(startClone.textContent.substring(0, startOffset))
+        let endText = document.createTextNode(endClone.textContent.substring(endOffset))
+        let markText = document.createTextNode(startClone.textContent.substring(startOffset, endOffset))
+        mark.appendChild(markText)
+        start.parentNode.replaceChild(endText, start)
+        endText.parentNode.insertBefore(mark, endText)
+        mark.parentNode.insertBefore(startText, mark)
+        return endText
+    }
+    let nodes = getNodesInRange(start, end)
+    nodes.forEach((node) => {
+        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(mark.parentNode)) { // Checks the parent to minimize the amount of <span> elements to insert into the DOM
+            mark = document.createElement("mark")
+            mark.className = "highlight"
+            mark.setAttribute("id", id)
+            node.parentNode.replaceChild(mark, node)
+        }
+        mark.appendChild(node)
+        // Splits off the unhighlighted portion of the starting text node if necessary.
+        if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
+            let newText = document.createTextNode(node.textContent.substring(0, startOffset))
+            node.textContent = node.textContent.substring(startOffset)
+            mark.parentNode.insertBefore(newText, mark)
+        }  // Splits off the unhighlighted portion of the ending text node if necessary.
+        else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
+            let newText = document.createTextNode(node.textContent.substring(endOffset))
+            node.textContent = node.textContent.substring(0, endOffset)
+            mark.parentNode.replaceChild(newText, mark)
+            newText.parentElement.insertBefore(mark, newText)
+        }
+    })
+    return mark
+}
+
+/**
+ * Manipulates the DOM to put nodes contained in the selection into <mark> elements.
  * This is separate from highlightText as dealing with the popup and span elements would add bloat and make both functionalities less readable.
  * @param id the id of a note, in the format "annotater${id}/${url}" 
  * @param start The start node of the range being highlighted
@@ -188,7 +188,6 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     popup.textContent = note
     popup.style.display = "none"
     popup.id = `annotater-popup/${id}`
-    console.log(popup.id)
     span.setAttribute("id", id)
     // This block handles the case where the range is entirely within a single node. It is separated out as to avoid unnecesary function calls.
     if (start.isEqualNode(end) && start.nodeType == Node.TEXT_NODE) {
@@ -210,7 +209,7 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
     }
     let nodes = getNodesInRange(start, end)
     nodes.forEach((node) => {
-        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(span.parentNode)) {
+        if (node.isEqualNode(start) || !node.parentNode.isEqualNode(span.parentNode)) { // Checks the parent to minimize the amount of <span> elements to insert into the DOM
             span = document.createElement("span")
             span.className = "annotation"
             span.setAttribute("id", id)
@@ -226,13 +225,13 @@ function annotateText(id, start, end, startOffset, endOffset, note) {
         // Handles splitting off unhighlighted portion of the start node.
         if (node.isEqualNode(startClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(0, startOffset))
-            node.textContent = node.textContent.substring(startOffset) // TODO: Could split this into a separate function
+            node.textContent = node.textContent.substring(startOffset)
             span.parentNode.insertBefore(newText, span)
         } // Handles splitting off unhighlighted portion of the end node. 
         else if (node.isEqualNode(endClone) && node.nodeType == Node.TEXT_NODE) {
             let newText = document.createTextNode(node.textContent.substring(endOffset))
             node.textContent = node.textContent.substring(0, endOffset)
-            span.parentNode.replaceChild(newText, span) // TODO: Could split this into a separate function
+            span.parentNode.replaceChild(newText, span)
             newText.parentElement.insertBefore(span, newText)
         }
     })
@@ -304,7 +303,7 @@ function findEnd(start, endData, content) {
         if (node.data === endData) {
             return node
         } // Just checking the textContent of the start on it's own is not sufficient to know if the start was correct. Every node should be checked to make sure it all matches.
-        else if (!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) {
+        else if ((!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) && !node.isEqualNode(start)) { // TODO: Test this conditional more thouroughly
             break;
         }
         node = getNextNode(node)
@@ -382,21 +381,27 @@ function editNote(id, note) {
 function changeColor(type, value) {
     // This block taken from https://developer.mozilla.org/en-US/docs/Web/API/Document/styleSheets
     let sheet
+    let rules
     for (i = 0; i < document.styleSheets.length; i++) {
         if (document.styleSheets[i].title === "annotater") {
             sheet = document.styleSheets[i]
             break;
         }
     }
+    rules = sheet.cssRules
+    for (i = 0; i < rules.length; i++) {
+        if (rules.item(i).selectorText.includes(type)) {
+            sheet.deleteRule(i)
+            break;
+        }
+    }
     switch(type) {
         case "highlight":
-            sheet.deleteRule(0)
-            sheet.insertRule(`.highlight { background: ${value}; }`, 0)
-            localStorage.setItem("highlightColor", value)
+            sheet.insertRule(`.${type} { background: ${value}; }`)
+            localStorage.setItem(`${type}Color`, value)
             break;
         case "annotation":
-            sheet.deleteRule(1)
-            sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${value}; }`, 1)
+            sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${value}; }`)
             localStorage.setItem("annotationColor", value)
             break;
     }
@@ -429,21 +434,12 @@ browser.runtime.onMessage.addListener((command, tab) => {
 })
 
 browser.storage.sync.onChanged.addListener((changes, area) => {
-    let sheet
-    for (i = 0; i < document.styleSheets.length; i++) {
-        if (document.styleSheets[i].title === "annotater") {
-            sheet = document.styleSheets[i]
-            break;
-        }
-    }
     const changedItems = Object.keys(changes)
     if (changedItems.includes("annotaterHighlightColor")) {
-        sheet.deleteRule(1)
-        sheet.insertRule(`.highlight { background: ${changes.annotaterHighlightColor.newValue}; }`, 1)
+        changeColor("highlight", changes.annotaterHighlightColor.newValue)
     }
     if (changedItems.includes("annotaterAnnotationColor")) {
-        sheet.deleteRule(2)
-        sheet.insertRule(`.annotation { text-shadow: 0 0 0.2em ${changes.annotaterAnnotationColor.newValue}; }`, 2)
+        changeColor("annotation", changes.annotaterAnnotationColor.newValue)
     }
 })
 
