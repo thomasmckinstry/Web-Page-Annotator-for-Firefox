@@ -18,7 +18,7 @@
     },
 
     "sidebar_action": {
-      "default_icon": "icons/journals.svg",
+      "default_icon": "icons/sidebarIcon.svg",
       "default_title" : "Annotater",
       "default_panel": "sidebar/notes-sidebar.html",
       "open_at_install": false
@@ -48,8 +48,8 @@
     },
 
     "icons": {
-        "64": "icons/logo.svg",
-        "32": "icons/logo.svg"
+        "64": "icons/sidebarIcon.svg",
+        "32": "icons/sidebarIcon.svg"
       },
 
     "content_scripts": [
