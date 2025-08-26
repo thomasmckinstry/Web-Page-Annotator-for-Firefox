@@ -57,6 +57,8 @@ function highlightTextReceived() {
         endData: end.textContent,
         startOffset: startOffset,
         endOffset: endOffset,
+        startType: start.nodeType,
+        endType: end.nodeType,
         content: range.toString(),
     }
     highlightText(`annotater${id}${url}`, start, end, startOffset, endOffset) // Handles the actual DOM manipulation.
@@ -98,6 +100,8 @@ function annotateTextReceived() {
         endData: end.textContent,
         startOffset: startOffset,
         endOffset: endOffset,
+        startType: start.nodeType,
+        endType: end.nodeType,
         annotation: note,
         content: range.toString(),
     }
@@ -282,7 +286,8 @@ function checkAnnotatedNode(node, notes) {
     let iter = notes.keys()
     let currKey = iter.next().value
     while (currKey != null) {
-        if (notes.get(currKey).startData === node.textContent) {
+        let currNote = notes.get(currKey)
+        if (currNote.startData === node.textContent && currNote.startType == node.nodeType) {
             return currKey
         }
         currKey = iter.next().value
@@ -297,10 +302,10 @@ function checkAnnotatedNode(node, notes) {
  * @param content All content that was in the range.
  * @returns the end node if found, null if not found (usually occurs when the text from start exists in multiple places)
  */
-function findEnd(start, endData, content) {
+function findEnd(start, endData, endType, content) {
     let node = start;
     while (node != null) {
-        if (node.data === endData) {
+        if (node.data === endData && node.nodeType == endType) {
             return node
         } // Just checking the textContent of the start on it's own is not sufficient to know if the start was correct. Every node should be checked to make sure it all matches.
         else if ((!content.includes(node.textContent) && node.nodeType == Node.TEXT_NODE) && !node.isEqualNode(start)) { // TODO: Test this conditional more thouroughly
@@ -311,8 +316,6 @@ function findEnd(start, endData, content) {
     return null;
 }
 
-// TODO: This is working inconsistently. Need to test it more thoroughly
-// TODO: Add something to notify the user if a note fails to be displayed. (This can probably happen in the sidebar)
 /**
  * Looks through localStorage to find and highlight notes from previous sessions.
  */
@@ -330,7 +333,7 @@ function reannotate() {
         let key = checkAnnotatedNode(node, notes)
         if (key) {
             let note = JSON.parse(localStorage.getItem(key))
-            let end = findEnd(node, note.endData, note.content)
+            let end = findEnd(node, note.endData, note.endType, note.content)
             if (end == null) {
                 node = getNextNode(node)
                 continue
@@ -425,7 +428,7 @@ browser.runtime.onMessage.addListener((command, tab) => {
             scrollToNote(command.id)
             break;
         case "delete-note":
-            localStorage.removeItem(id)
+            localStorage.removeItem(command.id)
             break;
         case "edit-note":
             editNote(command.id, command.note)
@@ -455,6 +458,12 @@ function modifyStylesheet() {
     style.id = "annotater-stylesheet"
     style.title = "annotater"
     let css = `
+        .highlight {
+            background-color: #ffff00;
+        }
+        .annotation {
+            text-shadow: 0 0 0.2em #ff4500;
+        }
         .popup {
             background-color: white;
             border: solid;
@@ -481,24 +490,13 @@ function modifyStylesheet() {
     annotationPromise.then(setColor)
 
     function setColor(object) {
-        let highlightColor
-        let annotationColor
-        let rule
         switch (Object.keys(object)[0]) {
-        case "annotaterHighlightColor":
-            highlightColor = object.annotaterHighlightColor || "#ffff00"
-            rule = `.highlight { background: ${highlightColor}; }`
-            break;
-        case "annotaterAnnotationColor":
-            annotationColor = object.annotaterAnnotationColor || "#ff4500"
-            rule = `.annotation { text-shadow: 0 0 0.2em ${annotationColor}; }`
-            break;
-        }
-        if (style.styleSheet) {
-        // Required for IE8 and below
-            style.styleSheet.cssText + rule;
-        } else {
-            style.appendChild(document.createTextNode(rule));
+            case "annotaterHighlightColor":
+                changeColor("highlight", object.annotaterHighlightColor)
+                break;
+            case "annotaterAnnotationColor":
+                changeColor("annotation", object.annotaterAnnotationColor)
+                break;
         }
     }
 }
