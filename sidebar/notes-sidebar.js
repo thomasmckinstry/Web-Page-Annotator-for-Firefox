@@ -4,7 +4,7 @@ const linkFilepath = "../icons/link-45deg.svg"
 const highlightFilepath = "/icons/highlighter.svg"
 const annotateFilepath = "/icons/journal-text.svg"
 
-let highlightColor = "yellow";
+let highlightColor = "#ffff00";
 let annotationColor = "#ff4500";
 
 let myWindowId
@@ -203,7 +203,7 @@ function addListeners() {
     case "annotate-text":
       displayAnnotation(message)
       break;
-  })
+  }})
 }
 
 /**
@@ -237,15 +237,15 @@ function loadColors() {
     switch (Object.keys(object)[0]) {
       case "annotaterHighlightColor":
         highlightColor = object.annotaterHighlightColor || "#ffff00"
+        let highlightPicker = document.getElementById("highlight-color-change")
+        highlightPicker.value = highlightColor
         break;
       case "annotaterAnnotationColor":
         annotationColor = object.annotaterAnnotationColor || "#ff4500"
+          let annotatePicker = document.getElementById("annotate-color-change")
+          annotatePicker.value = annotationColor  
         break;
     }
-    let highlightPicker = document.getElementById("highlight-color-change")
-    let annotatePicker = document.getElementById("annotate-color-change")
-    highlightPicker.value = highlightColor
-    annotatePicker.value = annotationColor
   }
 }
 
@@ -258,4 +258,4 @@ and update its content.
 browser.windows.getCurrent({populate: true}).then((windowInfo) => {
   myWindowId = windowInfo.id;
   refreshNotes();
-});
+})
