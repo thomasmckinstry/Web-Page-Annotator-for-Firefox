@@ -66,7 +66,7 @@ Feel free to notify me of any feature requests or problems via the Issues tab in
 
 <h2> About </h2>
 
-[./LICENSE.txt](GPLv3 License)
+[https://github.com/thomasmckinstry/Web-Page-Annotator-for-Firefox/blob/main/LICENSE.txt](GPLv3 License)
 
 - Used icons from [https://icons.getbootstrap.com/](Bootstrap) for buttons as well as icon and logo designs.
 
