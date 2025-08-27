@@ -165,7 +165,7 @@ function deleteNote(id) {
  * @returns The new annotation, to be sent to the content_script and put in localStorage.
  */
 function editNote(id) {
-  let newNote = prompt("Enter Note.") // TODO: Replace this with a custom element for better visuals and preload existing annotation for ease of use.
+  let newNote = prompt("Enter New Note.") // TODO: Replace this with a custom element for better visuals and preload existing annotation for ease of use.
   if (newNote == null || newNote == "") {
     return
   }

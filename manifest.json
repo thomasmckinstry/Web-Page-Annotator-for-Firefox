@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
-    "name": "HTML Annotator",
+    "name": "Web Page Annotator",
     "version": "1.0",
   
-    "description": "A browser extension that allows a user to annotate any HTML page by highlighting text and adding notes.",
+    "description": "An elegant and easy solution for highlighting and annotating any web page. Saves notes in the browser and displays them on the relevant page any time it's visited.",
 
     "background": {
       "scripts": ["src/app/background.js"]
@@ -18,7 +18,7 @@
 
     "sidebar_action": {
       "default_icon": "src/components/icons/mainIcon.svg",
-      "default_title" : "Annotater",
+      "default_title" : "Web Page Annotator",
       "default_panel": "src/components/notes-sidebar.html",
       "open_at_install": false
     },

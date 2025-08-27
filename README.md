@@ -1,18 +1,17 @@
 <h1 align="center">
-<sub>
-<img src="./src/components/icons/logo.svg" height="100" width="100">
-</sub>
 Web Page Annotator
 </h1>
+<img align="center" src="./src/components/icons/logo.svg" height="100" width="100">
 
 Web Page Annotater is a browser extension for firefox that allows the users to take notes on any HTML web page by highlighting text and making annotations. Any notes are displayed in the sidebar on the page they were made in.
 
 <h2> Features </h2>
 
-- Highlighting text.
-- Making annotations.
+- Highlight text.
+- Annotate text.
 - Edit existing annotations.
-- Sidebar that displays notes.
+- Display notes in the sidebar.
+- Display notes on subsequent visits to the same page.
 - Scroll to annotated text in page from sidebar.
 - Remove notes.
 
@@ -34,20 +33,26 @@ Web Page Annotater is a browser extension for firefox that allows the users to t
 <h2> Usage </h2>
 
 <h3> Making Notes </h3>
-<p>
-Two forms of notes exist, highlighting text, and annotating text. The user should select the desired text and then can highlight text with the shortcut `Ctrl + Alt + h` or annotate text with the shortcut `Ctrl + Alt + n`. Additionally, when text is selected, the user can right-click and there will be a sub-menu corresponding to the extension that will have buttons for each note type. If the user chooses to annotate text, a pop-up will appear to input the note.
-<br>
-The note made on annotated text can be viewed by hovering over the text, which will have a text-shadow to indicate that it was annotated.
-</p>
+
+***
+
+The user should select the desired text and then can highlight text with the shortcut `Ctrl + Alt + h` or annotate text with the shortcut `Ctrl + Alt + n`. Alternatively, when text is selected, the user can right-click and there will be a sub-menu corresponding to the extension that will have buttons for each note type. If the user chooses to annotate text, a pop-up will appear to input the note.
+
+The note made on annotated text can be viewed by hovering over the text, causing a pop-up to appear. Annotated text will have a text-shadow to indicate that it was annotated.
+
+***
 
 <h3> Sidebar </h3>
-<p>
+
+***
+
 The sidebar automatically displays all notes on the current page.
-<br>
+
 The sidebar has two color selectors at the top, which will change the color of highlighted text, and the color of annotated text. Icons indicate which selector controls the color of each note type.
-<br>
+
 Each note has a button to delete the note. Deleting the note will not immediately remove it from the web page, but it will not display after a refresh. Another button exists to scroll to the note on the web page. Annotations have a button to edit the note, a pop-up will appear when this button is clicked to create a new annotation.
-</p>
+
+***
 
 <h2> Technologies Used </h2>
 
