@@ -1,7 +1,6 @@
 <h1 align="center">
 Web Page Annotator
 </h1>
-<img align="center" src="./src/components/icons/logo.svg" height="100" width="100">
 
 Web Page Annotater is a browser extension for firefox that allows the users to take notes on any HTML web page by highlighting text and making annotations. Any notes are displayed in the sidebar on the page they were made in.
 
