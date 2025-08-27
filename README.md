@@ -1,18 +1,25 @@
-# <img src="./src/components/icons/logo.svg"> Web Page Annotator
+
+
+<h1 align="center">
+<sub>
+<img src="./src/components/icons/logo.svg" height="38" width="38">
+</sub>
+Web Page Annotator
+</h1>
 
 Web Page Annotater is a browser extension for firefox that allows the users to take notes on any HTML web page by highlighting text and making annotations. Any notes are displayed in the sidebar on the page they were made in.
 
-## Features
+<h2> Features </h2>
 
 - 
 
-## Installation
+<h2>Installation</h2>
 
-### addons.mozilla.org (AMO)
+<h3>addons.mozilla.org (AMO)</h3>
 
 1. [https://addons.mozilla.org/en-US/firefox/](Click Here)
 
-### Building from source
+<h3> Building from source </h3>
 
 1. Clone repository
 
@@ -26,16 +33,16 @@ Web Page Annotater is a browser extension for firefox that allows the users to t
 
 6. Select the zip file generated in the web-ext-artifacts folder
 
-## Usage
+<h2> Usage </h2>
 
-### Making Notes
+<h3> Making Notes </h3>
 
-### Sidebar
+<h3> Sidebar </h3>
 
-## Technologies Used
+<h2> Technologies Used </h2>
 
-## Issues and Requests
+<h2> Issues and Requests </h2>
 
-## Acknowledgements
+<h2> Acknowledgements </h2>
 
-## License
+<h2> License </h2>
