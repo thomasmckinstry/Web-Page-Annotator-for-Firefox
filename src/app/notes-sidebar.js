@@ -136,14 +136,6 @@ function displayAnnotation(message) {
   newNote.appendChild(textContent)
   newNote.appendChild(document.createElement("hr"))
   newNote.appendChild(annotateContent)
-  // newNote.innerHTML = `<div class="note-header annotation">
-  //                         <img class="note-icon" src="${annotateFilepath}" alt="annotated text">
-  //                         <div class="buttons" style="margin-left: auto;">
-  //                         </div>
-  //                       </div>
-  //                       <p class="note-text">${message.content}</p>
-  //                       <hr />
-  //                       <p class="note-text annotation-text">${message.annotation}</p>`
   notes.appendChild(newNote)
   let buttonsArray = document.getElementsByClassName("buttons")
   // Finds the 'last' element of 'buttons' class in the DOM, this will find the one corresponding to the most recent note, as it will be the last one in the DOM.
