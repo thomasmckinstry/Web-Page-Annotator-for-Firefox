@@ -3,7 +3,7 @@
     "name": "HTML Annotator",
     "version": "1.0",
   
-    "description": "Allows a user to annotate a page in the browser. Include highlighting text and adding notes.",
+    "description": "A browser extension that allows a user to annotate any HTML page by highlighting text and adding notes.",
 
     "background": {
       "scripts": ["src/app/background.js"]
