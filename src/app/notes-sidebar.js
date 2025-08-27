@@ -18,6 +18,7 @@ let notes = document.querySelector(".notes-window")
 function createLinkButton(id) {
   let linkButton = document.createElement('img')
   linkButton.src = linkFilepath
+  linkButton.alt = "Scroll to note"
   linkButton.className = "button"
   linkButton.addEventListener("click", () => {
     handleMessage(id, "scroll-to-note", "")
@@ -33,6 +34,7 @@ function createLinkButton(id) {
 function createDeleteButton(id) {
   let deleteButton = document.createElement('img')
   deleteButton.src = deleteFilepath
+  deleteButton.alt = "Delete note"
   deleteButton.className = "button"
   deleteButton.addEventListener("click", () => {
     handleMessage(id, "delete-note", "")
@@ -49,12 +51,33 @@ function createDeleteButton(id) {
 function createEditButton(id) {
   let editButton = document.createElement('img')
   editButton.src = editFilepath
+  editButton.alt = "Edit note"
   editButton.className = "button"
   editButton.addEventListener("click", () => {
     let value = editNote(id)
     handleMessage(id, "edit-note", value)
   })
   return editButton
+}
+
+function createNoteHeader(type) {
+  let noteHeader = document.createElement("div")
+  let noteIcon = document.createElement("img")
+  let buttons = document.createElement("div")
+  noteHeader.className = "note-header " + type
+  noteIcon.className = "note-icon"
+  buttons.className = "buttons"
+  if (type === "highlight-text") {
+    noteIcon.src = highlightFilepath
+    noteIcon.alt = "Highlighted text"
+  }
+  else {
+    noteIcon.src = annotateFilepath
+    noteIcon.alt = "Annotated text"
+  }
+  noteHeader.appendChild(noteIcon)
+  noteHeader.appendChild(buttons)
+  return noteHeader
 }
 
 /**
@@ -70,14 +93,14 @@ function displayHighlight(message) {
   let newNote = document.createElement('div')
   let linkButton = createLinkButton(message.id)
   let deleteButton = createDeleteButton(message.id)
+  let noteHeader = createNoteHeader(message.type)
+  let textContent = document.createElement("p")
+  textContent.className = "note-text"
+  textContent.textContent = message.content
   newNote.className = "note" 
   newNote.setAttribute("id", message.id)
-  newNote.innerHTML = `<div class="note-header highlight">
-                          <img class="note-icon" src="${highlightFilepath}" alt="highlighted text">
-                          <div class="buttons" style="margin-left: auto;">
-                          </div>
-                        </div>
-                        <p class="note-text">${message.content}</p>`
+  newNote.appendChild(noteHeader)
+  newNote.append(textContent)
   notes.appendChild(newNote)
   let buttonsArray = document.getElementsByClassName("buttons")
   // Finds the 'last' element of 'buttons' class in the DOM, this will find the one corresponding to the most recent note, as it will be the last one in the DOM.
@@ -100,16 +123,27 @@ function displayAnnotation(message) {
   let linkButton = createLinkButton(message.id)
   let deleteButton = createDeleteButton(message.id)
   let editButton = createEditButton(message.id)
+  let noteHeader = createNoteHeader(message.type)
+  let textContent = document.createElement("p")
+  let annotateContent = document.createElement("p")
+  textContent.className = ("note-text")
+  textContent.textContent = message.content
+  annotateContent.className = ("note-text annotation-text")
+  annotateContent.textContent = message.annotation
   newNote.className = "note" 
-  newNote.setAttribute("id", message.id)
-  newNote.innerHTML = `<div class="note-header annotation">
-                          <img class="note-icon" src="${annotateFilepath}" alt="annotated text">
-                          <div class="buttons" style="margin-left: auto;">
-                          </div>
-                        </div>
-                        <p class="note-text">${message.content}</p>
-                        <hr />
-                        <p class="note-text annotation-text">${message.annotation}</p>`
+  newNote.setAttribute("id", message.id) // TODO: Unsafe assignment to innerHTML, replace with commands
+  newNote.appendChild(noteHeader)
+  newNote.appendChild(textContent)
+  newNote.appendChild(document.createElement("hr"))
+  newNote.appendChild(annotateContent)
+  // newNote.innerHTML = `<div class="note-header annotation">
+  //                         <img class="note-icon" src="${annotateFilepath}" alt="annotated text">
+  //                         <div class="buttons" style="margin-left: auto;">
+  //                         </div>
+  //                       </div>
+  //                       <p class="note-text">${message.content}</p>
+  //                       <hr />
+  //                       <p class="note-text annotation-text">${message.annotation}</p>`
   notes.appendChild(newNote)
   let buttonsArray = document.getElementsByClassName("buttons")
   // Finds the 'last' element of 'buttons' class in the DOM, this will find the one corresponding to the most recent note, as it will be the last one in the DOM.
