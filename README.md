@@ -18,7 +18,7 @@ Web Page Annotater is a browser extension for firefox that allows the users to t
 
 <h3>addons.mozilla.org (AMO)</h3>
 
-1. [Click Here](https://addons.mozilla.org/en-US/firefox/) (Pending being submitted to AMO)
+1. [Click Here](https://addons.mozilla.org/en-US/firefox/addon/web-annotator/)
 
 <h3> Building from source </h3>
 
