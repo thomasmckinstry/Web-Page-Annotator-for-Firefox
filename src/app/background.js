@@ -32,13 +32,13 @@ function handleMessage(command) {
 function createButtons() {
   browser.menus.create({
       id: "highlight-selection",
-      title: browser.i18n.getMessage("selectedTextHighlight"),
+      title: "Highlight Selected Text",
       contexts: ["selection"],
-  }, onCreated);
+  }, onCreated);  
 
   browser.menus.create({
       id: "annotate-selection",
-      title: browser.i18n.getMessage("selectedTextAnnotation"),
+      title: "Annotate Selected Text",
       contexts: ["selection"],
   }, onCreated);
 }
