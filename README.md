@@ -39,13 +39,15 @@ The user should select the desired text and then can highlight text with the sho
 
 The note made on annotated text can be viewed by hovering over the text, causing a pop-up to appear. Annotated text will have a text-shadow to indicate that it was annotated.
 
-***
-
-<h3> Sidebar </h3>
+Notes are stored in the "Local Storage" for the web page it was made on. [See Here](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) for details.
 
 ***
 
-The sidebar automatically displays all notes on the current page.
+<h3> Sidebar < /h3>
+
+***
+
+The sidebar automatically displays all notes on the current page, it can be opened using the regular firefox sidebar button located to the left of the address bar.
 
 The sidebar has two color selectors at the top, which will change the color of highlighted text, and the color of annotated text. Icons indicate which selector controls the color of each note type.
 
