@@ -43,7 +43,7 @@ Notes are stored in the "Local Storage" for the web page it was made on. [See He
 
 ***
 
-<h3> Sidebar < /h3>
+<h3> Sidebar </h3>
 
 ***
 
